@@ -9,4 +9,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
     Optional<User> findByEmail(String email);
+
+    // Google 소셜 로그인 추가 메서드
+    Optional<User> findByProviderAndProviderId(String provider, String providerId);
 }
