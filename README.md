@@ -1,75 +1,109 @@
-**CodeWise-Backend
-AI 기반 실시간 코드 분석 시스템의 백엔드 저장소입니다.**
+🚀 CodeWise 백엔드
+AI 기반 실시간 코드 분석 시스템의 백엔드 저장소
 
-🛠️ 사용된 기술 및 개발 환경
+🛠️ 기술 스택 & 개발 환경
 언어: Java 17
 
 프레임워크: Spring Boot
 
 빌드 도구: Gradle
 
+IDE: IntelliJ IDEA
+
 데이터베이스: MySQL 8.0
 
 ORM: Spring Data JPA, Hibernate
 
-인증/권한: Spring Security, JWT, Spring Security OAuth2 Client
+인증/인가: Spring Security, JWT, OAuth2 Client
 
 실시간 통신: Spring WebSocket (STOMP)
 
-API 문서: Swagger UI (springdoc-openapi)
+API 문서화: Swagger UI (springdoc-openapi)
 
-외부 연동: Python 기반 AI 분석 서버 (HTTP 통신), Google OAuth2 API
+외부 연동
 
-IDE: IntelliJ IDEA
+Python 기반 AI 분석 서버 (HTTP 통신)
 
+Google OAuth2 API
 
-🚀 CodeWise 백엔드 API 엔드포인트
+📌 API 엔드포인트 요약
+1. 🔐 인증 및 사용자 관리 (Auth & User)
+POST /auth/signup
+→ 새로운 사용자 계정 생성
 
-1. 인증 및 사용자 관리 (Auth & User)
-인증 POST /auth/signup - 새로운 사용자 계정을 생성합니다.
+POST /auth/login
+→ 이메일 + 비밀번호로 로그인 & JWT 토큰 발급
 
-인증 POST /auth/login - 이메일과 비밀번호로 로그인하고 JWT 토큰을 발급받습니다.
+GET /user/me
+→ 현재 로그인된 사용자 정보 조회
 
-사용자 GET /user/me - 현재 로그인된 사용자의 정보를 조회합니다.
+PUT /user/me
+→ 사용자 정보 수정 (비밀번호 또는 이메일)
 
-사용자 DELETE /user/me - 현재 로그인된 사용자 계정을 삭제합니다.
+DELETE /user/me
+→ 사용자 계정 삭제
 
-사용자 PUT /user/me - 현재 로그인된 사용자의 정보를 수정합니다. (비밀번호 또는 이메일 선택 수정)
+OAuth2 로그인
 
-OAuth2 GET /oauth2/authorization/google - Google OAuth2 로그인 페이지로 리다이렉트합니다.
+GET /oauth2/authorization/google
+→ Google OAuth2 로그인 리다이렉트
 
-OAuth2 GET /oauth2/callback/google - Google 로그인 성공 후 콜백을 처리하고 JWT 토큰을 포함하여 프론트엔드로 리다이렉트합니다. (프론트엔드 리다이렉트 URL: http://localhost:3000/oauth2/redirect?token=발급된_JWT_토큰)
+GET /oauth2/callback/google
+→ 로그인 성공 후 JWT 포함하여 프론트엔드로 리다이렉트
 
-2. 코드 제출 (Code Submission)
-코드 제출 POST /code/submit - 사용자가 코드를 제출하고 저장합니다.
+리다이렉트 URL 예시:
+http://localhost:3000/oauth2/redirect?token=발급된_JWT_토큰
 
-코드 제출 GET /code/list - 현재 로그인된 사용자가 제출한 모든 코드 목록을 조회합니다.
+2. 📥 코드 제출 (Code Submission)
+POST /code/submit
+→ 코드 제출 및 저장
 
-코드 제출 GET /code/{id} - 특정 ID를 가진 제출된 코드의 상세 내용을 조회합니다.
+GET /code/list
+→ 제출한 코드 목록 전체 조회
 
-코드 제출 DELETE /code/{id} - 특정 ID를 가진 제출된 코드를 삭제합니다.
+GET /code/{id}
+→ 특정 코드 ID 조회
 
-코드 제출 GET /code/submission/user - 현재 로그인한 사용자의 모든 코드 제출 내역을 조회합니다.
+DELETE /code/{id}
+→ 특정 코드 삭제
 
-3. 분석 결과 (Analysis Result)
-분석 결과 GET /analysis/result/{submissionId} - 특정 코드 제출 ID에 대한 AI 분석 결과를 조회합니다.
+GET /code/submission/user
+→ 로그인된 사용자 코드 제출 내역 조회
 
-분석 결과 GET /analysis/user/{username} - (관리자 또는 특정 사용자 이력을 볼 때 사용) 특정 사용자의 모든 분석 결과를 조회합니다.
+3. 📊 분석 결과 (Analysis Result)
+GET /analysis/result/{submissionId}
+→ 특정 제출 ID에 대한 분석 결과 조회
 
-분석 결과 GET /analysis/history - 현재 로그인된 사용자의 모든 분석 이력을 조회합니다.
+GET /analysis/user/{username}
+→ 특정 사용자 분석 결과 전체 조회 (관리자용)
 
-분석 결과 GET /analysis/{id} - 특정 분석 결과 ID에 대한 상세 내용을 조회합니다.
+GET /analysis/history
+→ 로그인된 사용자 분석 이력 조회
 
-분석 결과 GET /user/history - 현재 로그인된 사용자의 분석 이력을 정렬 및 필터링하여 조회합니다.
+GET /analysis/{id}
+→ 특정 분석 결과 상세 조회
 
-쿼리 파라미터: sortBy (id, score, maintainability, readability, bug 중 택 1), direction (asc, desc 중 택 1), keyword (선택, 요약 내용 키워드)
+GET /user/history
+→ 사용자 분석 이력 정렬/필터 조회
 
-4. 실시간 코드 분석 (WebSocket)
-WebSocket CONNECT /ws - STOMP 프로토콜을 사용하여 WebSocket 연결을 설정합니다.
+쿼리 파라미터
 
-WebSocket SEND /app/analyze - 클라이언트에서 작성 중인 코드를 실시간으로 분석 요청합니다.
+sortBy: id, score, maintainability, readability, bug
 
-WebSocket SUBSCRIBE /topic/result - 실시간 분석 결과를 받기 위해 구독합니다.
+direction: asc or desc
 
-5. 기타 (Other)
-상태 확인 GET / - 백엔드 서버의 실행 여부를 확인합니다
+keyword: (선택) 요약 키워드
+
+4. ⚡ 실시간 코드 분석 (WebSocket)
+CONNECT /ws
+→ WebSocket 연결 (STOMP 프로토콜 사용)
+
+SEND /app/analyze
+→ 실시간 분석 요청 전송
+
+SUBSCRIBE /topic/result
+→ 실시간 분석 결과 수신
+
+5. ✅ 기타 (Other)
+GET /
+→ 백엔드 서버 상태 확인
