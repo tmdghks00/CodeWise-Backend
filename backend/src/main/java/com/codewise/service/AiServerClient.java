@@ -11,7 +11,6 @@ import java.util.Map;
 @Service
 public class AiServerClient {
     // 외부 AI 서버와 통신하여 코드 분석 요청을 보내고 결과를 받아오는 역할을 하는 클래스
-
     private final String aiServerUrl = "http://localhost:5000/analyze"; // AI 서버의 엔드포인트 URL
 
     // AI 서버에 코드 분석 요청을 보내고, JsonNode 형태로 응답을 받아오는 메서드
