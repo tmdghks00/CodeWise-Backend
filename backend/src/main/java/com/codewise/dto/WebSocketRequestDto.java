@@ -10,5 +10,4 @@ public class WebSocketRequestDto { // WebSocket 을 통해 실시간 분석 요�
     private String code;      // 실시간으로 분석 요청할 코드 내용
     private String language;  // 제출된 코드의 프로그래밍 언어
     private String sessionId; // WebSocket 연결 세션 ID
-
 }
