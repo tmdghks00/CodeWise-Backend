@@ -35,5 +35,4 @@ public class AnalysisResult { // AI 분석 결과(점수, 요약 등)를 저장�
 
     @Column(name = "score")
     private Integer score;// 전반적인 코드 품질 점수
-
 }
