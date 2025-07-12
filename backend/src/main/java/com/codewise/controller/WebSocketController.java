@@ -10,7 +10,6 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class WebSocketController {
     // WebSocket 메시지를 받아 분석 요청을 처리하고 결과를 브로드캐스트하는 컨트롤러
-
     private final AnalysisResultService analysisResultService;
 
     public WebSocketController(AnalysisResultService analysisResultService) {
