@@ -12,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.codewise.service.CustomOAuth2UserService; // 새로 추가한 서비스 임포트
-import com.codewise.config.OAuth2AuthenticationSuccessHandler; // 새로 추가한 핸들러 임포트
 
 @Configuration // 스프링 설정 클래스임을 명시
 public class SecurityConfig { // 스프링 시큐리티 설정을 통해 인증 및 권한 제어 구성
