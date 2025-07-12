@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
+
 // AnalysisResult 데이터를 DB 에서 조회/저장하기 위한 JPA 리포지토리 인터페이스
 public interface AnalysisResultRepository extends JpaRepository<AnalysisResult, Long> {
 
