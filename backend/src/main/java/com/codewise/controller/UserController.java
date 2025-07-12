@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserController { // 회원 정보 조회, 수정, 삭제 요청을 처리하는 컨트롤러
 
     private final UserService userService;
-
     public UserController(UserService userService) {
         this.userService = userService;
     }
