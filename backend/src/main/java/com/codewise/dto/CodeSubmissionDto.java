@@ -22,5 +22,4 @@ public class CodeSubmissionDto { // 클라이언트에 전달할 코드 제출 �
                 sub.getLanguage()
         );
     }
-
 }
