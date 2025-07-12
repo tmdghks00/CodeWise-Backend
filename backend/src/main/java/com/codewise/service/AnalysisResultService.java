@@ -153,7 +153,6 @@ public class AnalysisResultService {
                 .collect(Collectors.toList());
     }
 
-
     public AnalysisResultDto getAnalysisById(Long id) { // 특정 ID의 분석 결과를 조회하는 메서드 (기존 유지)
         AnalysisResult result = analysisResultRepository.findById(id)
                 .orElseThrow(() -> new CustomException("해당 분석 결과를 찾을 수 없습니다."));
