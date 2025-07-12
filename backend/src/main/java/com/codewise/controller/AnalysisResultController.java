@@ -44,5 +44,4 @@ public class AnalysisResultController { // 분석 결과 관련 API 요청을 �
     public ResponseEntity<AnalysisResultDto> getAnalysisById(@PathVariable Long id) {
         return ResponseEntity.ok(analysisResultService.getAnalysisById(id));
     }
-
 }
