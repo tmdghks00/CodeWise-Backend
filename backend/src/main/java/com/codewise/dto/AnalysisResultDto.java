@@ -25,7 +25,6 @@ public class AnalysisResultDto { // 클라이언트에 전달할 분석 결과 �
         );
     }
 
-
 }
 
 
