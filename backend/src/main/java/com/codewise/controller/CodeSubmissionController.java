@@ -14,7 +14,6 @@ import java.util.List;
 public class CodeSubmissionController { // 코드 제출 관련 요청을 처리하는 컨트롤러
 
     private final CodeSubmissionService codeSubmissionService;
-
     public CodeSubmissionController(CodeSubmissionService codeSubmissionService) {
         this.codeSubmissionService = codeSubmissionService;
     }
