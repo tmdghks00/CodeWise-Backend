@@ -23,7 +23,6 @@ public class JwtAuthenticationFilter extends GenericFilter { // JWT 토큰을 �
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
-
         String token = jwtUtil.resolveToken(request); // HTTP 요청에서 JWT 토큰을 추출
         if (token != null && jwtUtil.validateToken(token)) { // 토큰이 존재하고 유효한 경우에만 인증 처리
             String username = jwtUtil.getUsername(token);
