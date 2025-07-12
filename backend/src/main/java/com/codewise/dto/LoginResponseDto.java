@@ -1,5 +1,4 @@
 package com.codewise.dto;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
