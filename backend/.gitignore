@@ -19,7 +19,7 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-.idea/
+.idea/  
 *.iml
 *.ipr
 *.iws
@@ -42,4 +42,4 @@ nbdist/
 .vscode/
 
 ### 민감 설정 파일 ###
-src/main/resources/application.properties
+src/main/resources/application.properties # 
