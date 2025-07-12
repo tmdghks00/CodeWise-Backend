@@ -3,6 +3,7 @@ package com.codewise.exception;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 // 전역적으로 발생하는 예외를 잡아 사용자에게 일관된 응답 메시지를 제공하는 예외 핸들러 클래스
 @RestControllerAdvice
 public class GlobalExceptionHandler {
