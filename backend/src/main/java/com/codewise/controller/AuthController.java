@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController { // 회원가입 및 로그인 등 인증 관련 요청 처리
 
     private final AuthService authService;
-
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
