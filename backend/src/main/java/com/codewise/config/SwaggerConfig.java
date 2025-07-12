@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SwaggerConfig { // Swagger 설정을 통해 API 문서화 지원
+
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI().info(
