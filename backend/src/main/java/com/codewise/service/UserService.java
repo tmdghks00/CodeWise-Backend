@@ -61,5 +61,4 @@ public class UserService {
         return analysisResultService.getFilteredAndSortedUserHistory(email, filterDto);
     }
 
-
 }
