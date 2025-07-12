@@ -13,7 +13,6 @@ public class CorsConfig { // CORS 설정을 통해 프론트엔드에서의 요�
         config.addAllowedHeader("*"); // 모든 HTTP 헤더를 허용
         config.addAllowedMethod("*"); // 모든 HTTP 메서드(GET, POST, PUT, DELETE 등)를 허용
         config.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
