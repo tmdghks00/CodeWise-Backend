@@ -27,5 +27,4 @@ public class User { // 사용자 정보(이메일, 비밀번호, 역할 등)를 
     // Google 소셜 로그인 추가 필드
     private String provider; // 예: "google"
     private String providerId; // Google 에서 제공하는 사용자 고유 ID
-
 }
