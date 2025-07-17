@@ -29,8 +29,6 @@ public class CustomOAuth2User implements OAuth2User {
 
     @Override
     public String getName() {
-        // Spring Security 의 기본 OAuth2User 구현은 sub(고유 ID)를 반환하지만,
-        // 우리는 JWT 발행 시 email 을 사용하므로 email 을 반환하도록 재정의합니다.
         return this.email;
     }
 
