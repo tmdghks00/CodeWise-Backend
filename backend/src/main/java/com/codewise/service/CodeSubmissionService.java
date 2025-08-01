@@ -45,7 +45,7 @@ public class CodeSubmissionService {
     public List<CodeSubmissionDto> getUserCodeList(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
-        return codeSubmissionRepository.findByUser(user).stream()
+        return codeSubmissionRepository.findAllByUser(user).stream()
                 .map(sub -> new CodeSubmissionDto(sub.getId(), sub.getCode(), sub.getLanguage()))
                 .collect(Collectors.toList());
     }
