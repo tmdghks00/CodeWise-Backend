@@ -9,11 +9,15 @@ import org.springframework.web.socket.config.annotation.*;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer { // WebSocket 설정을 통해 실시간 통신 구성
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic");
+        // topic: 브로드캐스트용
+        // queue: 사용자 개별 메시징용 (점대점)
+        registry.enableSimpleBroker("/topic", "/queue"); // queue 추가
         registry.setApplicationDestinationPrefixes("/app");
     }
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // 클라이언트 연결 엔드포인트
         registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
     }
+
 }
