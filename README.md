@@ -57,17 +57,14 @@
 - `POST /code/submit`  
   → 코드 제출 및 저장
 
-- `GET /code/list`  
-  → 제출한 코드 목록 전체 조회 (관리자 전용 or 전체 데이터 접근 시 사용)
-
 - `GET /code/{id}`  
-  → 특정 코드 ID 조회
+  → 특정 코드 ID 조회 (본인 소유만 접근 가능)
 
 - `DELETE /code/{id}`  
-  → 특정 코드 삭제
+  → 특정 코드 삭제 (본인 소유만 삭제 가능)
 
 - `GET /code/submission/user`  
-  → 로그인된 사용자의 코드 제출 내역만 조회 (자신의 제출 기록 확인용)
+  → 로그인된 사용자의 코드 제출 내역 조회
 
 ---
 
@@ -76,17 +73,14 @@
 - `GET /analysis/result/{submissionId}`  
   → 특정 제출 ID에 대한 분석 결과 조회
 
-- `GET /analysis/user/{username}`  
-  → 특정 사용자 분석 결과 전체 조회 (관리자용)
-
-- `GET /analysis/history`  
-  → 로그인된 사용자 분석 이력 조회
+- `GET /analysis/user`  
+  → 로그인된 사용자의 모든 분석 결과 조회
 
 - `GET /analysis/{id}`  
   → 특정 분석 결과 상세 조회
 
 - `GET /user/history`  
-  → 사용자 분석 이력 정렬/필터 조회 (이 엔드포인트를 통해 로그인된 사용자의 모든 분석 이력을 정렬 및 필터링하여 조회)
+  → 로그인된 사용자의 분석 이력 정렬/필터 조회
 
   **쿼리 파라미터**  
   - `sortBy`: `id`, `score`, `maintainability`, `readability`, `bug`  
