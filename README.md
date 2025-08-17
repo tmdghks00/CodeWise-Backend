@@ -57,17 +57,14 @@
 - `POST /code/submit`  
   → 코드 제출 및 저장
 
-- `GET /code/list`  
-  → 제출한 코드 목록 전체 조회
-
 - `GET /code/{id}`  
-  → 특정 코드 ID 조회
+  → 특정 코드 ID 조회 (본인 소유만 접근 가능)
 
 - `DELETE /code/{id}`  
-  → 특정 코드 삭제
+  → 특정 코드 삭제 (본인 소유만 삭제 가능)
 
 - `GET /code/submission/user`  
-  → 로그인된 사용자 코드 제출 내역 조회
+  → 로그인된 사용자의 코드 제출 내역 조회
 
 ---
 
@@ -76,17 +73,14 @@
 - `GET /analysis/result/{submissionId}`  
   → 특정 제출 ID에 대한 분석 결과 조회
 
-- `GET /analysis/user/{username}`  
-  → 특정 사용자 분석 결과 전체 조회 (관리자용)
-
-- `GET /analysis/history`  
-  → 로그인된 사용자 분석 이력 조회
+- `GET /analysis/user`  
+  → 로그인된 사용자의 모든 분석 결과 조회
 
 - `GET /analysis/{id}`  
   → 특정 분석 결과 상세 조회
 
 - `GET /user/history`  
-  → 사용자 분석 이력 정렬/필터 조회  
+  → 로그인된 사용자의 분석 이력 정렬/필터 조회
 
   **쿼리 파라미터**  
   - `sortBy`: `id`, `score`, `maintainability`, `readability`, `bug`  
@@ -103,8 +97,8 @@
 - `SEND /app/analyze`  
   → 실시간 분석 요청 전송
 
-- `SUBSCRIBE /topic/result`  
-  → 실시간 분석 결과 수신
+- `SUBSCRIBE /user/queue/result`  
+  → 특정 사용자에게만 전송되는 실시간 분석 결과 수신 (각 사용자의 고유 큐로 결과가 전송)
 
 ---
 
