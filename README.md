@@ -67,7 +67,7 @@
   → 특정 코드 삭제
 
 - `GET /code/submission/user`  
-  → 로그인된 사용자 코드 제출 내역 조회
+  → 로그인된 사용자 코드 제출 내역 조회 (이 엔드포인트를 통해 모든 사용자 코드 제출 내역을 조회)
 
 ---
 
@@ -86,7 +86,7 @@
   → 특정 분석 결과 상세 조회
 
 - `GET /user/history`  
-  → 사용자 분석 이력 정렬/필터 조회  
+  → 사용자 분석 이력 정렬/필터 조회 (이 엔드포인트를 통해 로그인된 사용자의 모든 분석 이력을 정렬 및 필터링하여 조회)
 
   **쿼리 파라미터**  
   - `sortBy`: `id`, `score`, `maintainability`, `readability`, `bug`  
@@ -103,8 +103,8 @@
 - `SEND /app/analyze`  
   → 실시간 분석 요청 전송
 
-- `SUBSCRIBE /topic/result`  
-  → 실시간 분석 결과 수신
+- `SUBSCRIBE /user/queue/result`  
+  → 특정 사용자에게만 전송되는 실시간 분석 결과 수신 (각 사용자의 고유 큐로 결과가 전송)
 
 ---
 
