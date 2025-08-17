@@ -26,6 +26,12 @@ public class CodeSubmissionController { // 코드 제출 관련 요청을 처리
         return ResponseEntity.ok("코드 제출 완료");
     }
 
+    // "/code/list" 경로의 GET 요청을 처리 (현재 사용자가 제출한 코드 목록 조회)
+    @GetMapping("/list")
+    public ResponseEntity<List<CodeSubmissionDto>> getMyCodeList(@AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(codeSubmissionService.getUserCodeList(username));
+    }
+
     // "/code/{id}" 경로의 GET 요청을 처리 (특정 ID의 코드 조회)
     @GetMapping("/{id}")
     public ResponseEntity<CodeSubmissionDto> getCodeById(@PathVariable Long id) {

@@ -21,19 +21,25 @@ public class AnalysisResultController { // 분석 결과 관련 API 요청을 �
         this.analysisResultService = analysisResultService;
     }
 
-// "/analysis/result/{submissionId}" 경로의 GET 요청 처리 (특정 제출 ID의 분석 결과 조회)
+    // "/analysis/result/{submissionId}" 경로의 GET 요청 처리 (특정 제출 ID의 분석 결과 조회)
     @GetMapping("/result/{submissionId}")
     public ResponseEntity<AnalysisResultDto> getResult(@PathVariable Long submissionId) {
         return ResponseEntity.ok(analysisResultService.getResultBySubmissionId(submissionId));
     }
 
-// "/analysis/user" 경로의 GET 요청 처리 (특정 사용자의 모든 분석 결과 조회)
-    @GetMapping("/user")
-    public ResponseEntity<List<AnalysisResultDto>> getAllResultsByUser(@AuthenticationPrincipal UserDetails userDetails) {
-       return ResponseEntity.ok(analysisResultService.getAllResultsForUser(userDetails.getUsername()));
+    // "/analysis/user/{username}" 경로의 GET 요청 처리 (특정 사용자의 모든 분석 결과 조회)
+    @GetMapping("/user/{username}")
+    public ResponseEntity<List<AnalysisResultDto>> getAllResultsByUser(@PathVariable String username) {
+        return ResponseEntity.ok(analysisResultService.getAllResultsForUser(username));
     }
 
-// "/analysis/{id}" 경로의 GET 요청 처리 (특정 ID의 분석 결과 조회)
+    // "/analysis/history" 경로의 GET 요청 처리 (현재 로그인한 사용자의 분석 이력 조회)
+    @GetMapping("/history")
+    public ResponseEntity<List<AnalysisResultDto>> getAnalysisHistory(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(analysisResultService.getUserHistory(userDetails.getUsername()));
+    }
+
+    // "/analysis/{id}" 경로의 GET 요청 처리 (특정 ID의 분석 결과 조회)
     @GetMapping("/{id}")
     public ResponseEntity<AnalysisResultDto> getAnalysisById(@PathVariable Long id) {
         return ResponseEntity.ok(analysisResultService.getAnalysisById(id));
