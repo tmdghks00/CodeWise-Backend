@@ -27,7 +27,7 @@ public class AnalysisResultController { // 분석 결과 관련 API 요청을 �
         return ResponseEntity.ok(analysisResultService.getResultBySubmissionId(submissionId));
     }
 
-// "/analysis/user/{username}" 경로의 GET 요청 처리 (특정 사용자의 모든 분석 결과 조회)
+// "/analysis/user" 경로의 GET 요청 처리 (특정 사용자의 모든 분석 결과 조회)
     @GetMapping("/user")
     public ResponseEntity<List<AnalysisResultDto>> getAllResultsByUser(@AuthenticationPrincipal UserDetails userDetails) {
        return ResponseEntity.ok(analysisResultService.getAllResultsForUser(userDetails.getUsername()));
