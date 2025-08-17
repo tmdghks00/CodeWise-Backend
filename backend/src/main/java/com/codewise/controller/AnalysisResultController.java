@@ -28,15 +28,9 @@ public class AnalysisResultController { // 분석 결과 관련 API 요청을 �
     }
 
 // "/analysis/user/{username}" 경로의 GET 요청 처리 (특정 사용자의 모든 분석 결과 조회)
-    @GetMapping("/user/{username}")
-    public ResponseEntity<List<AnalysisResultDto>> getAllResultsByUser(@PathVariable String username) {
-        return ResponseEntity.ok(analysisResultService.getAllResultsForUser(username));
-    }
-
-// "/analysis/history" 경로의 GET 요청 처리 (현재 로그인한 사용자의 분석 이력 조회)
-    @GetMapping("/history")
-    public ResponseEntity<List<AnalysisResultDto>> getAnalysisHistory(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(analysisResultService.getUserHistory(userDetails.getUsername()));
+    @GetMapping("/user")
+    public ResponseEntity<List<AnalysisResultDto>> getAllResultsByUser(@AuthenticationPrincipal UserDetails userDetails) {
+       return ResponseEntity.ok(analysisResultService.getAllResultsForUser(userDetails.getUsername()));
     }
 
 // "/analysis/{id}" 경로의 GET 요청 처리 (특정 ID의 분석 결과 조회)

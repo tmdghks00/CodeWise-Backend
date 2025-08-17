@@ -41,15 +41,6 @@ public class CodeSubmissionService {
         codeSubmissionRepository.save(submission);
     }
 
-    // 이메일 기반으로 사용자 코드 목록 조회
-    public List<CodeSubmissionDto> getUserCodeList(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
-        return codeSubmissionRepository.findAllByUser(user).stream()
-                .map(sub -> new CodeSubmissionDto(sub.getId(), sub.getCode(), sub.getLanguage()))
-                .collect(Collectors.toList());
-    }
-
     // 코드 ID로 코드 조회
     public CodeSubmissionDto getCodeById(Long id) {
         CodeSubmission sub = codeSubmissionRepository.findById(id)
@@ -62,7 +53,7 @@ public class CodeSubmissionService {
         codeSubmissionRepository.deleteById(id);
     }
 
-    // 이메일 기반으로 제출 코드 전체 조회
+    // 로그인한 사용자의 제출 코드를 조회하는 메서드
     public List<CodeSubmissionDto> getSubmissionsByUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다."));
