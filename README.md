@@ -73,9 +73,6 @@
 - `GET /analysis/result/{submissionId}`  
   → 특정 제출 ID에 대한 분석 결과 조회
 
-- `GET /analysis/user`  
-  → 로그인된 사용자의 모든 분석 결과 조회
-
 - `GET /analysis/{id}`  
   → 특정 분석 결과 상세 조회
 
@@ -97,8 +94,9 @@
 - `SEND /app/analyze`  
   → 실시간 분석 요청 전송
 
-- `SUBSCRIBE /user/{username}/queue/result`  
-  → * 참고: 백엔드에서 사용자별로 메시지를 전송할 때, 클라이언트의 STOMP 구독 경로는 자동으로 /user/{username}/가 붙게 됨
+- `SUBSCRIBE /user/{username}/queue/result`
+  → 특정 사용자에게만 전송되는 실시간 분석 결과 수신
+  → 참고: 백엔드에서 사용자별로 메시지를 전송할 때, 클라이언트의 STOMP 구독 경로는 자동으로 /user/{username}/가 붙게 됨
 
 ---
 
