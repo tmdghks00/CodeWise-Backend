@@ -44,5 +44,4 @@ public class CodeSubmissionController { // 코드 제출 관련 요청을 처리
     public ResponseEntity<List<CodeSubmissionDto>> getUserSubmissions(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(codeSubmissionService.getSubmissionsByUser(userDetails.getUsername()));
     }
-
 }
