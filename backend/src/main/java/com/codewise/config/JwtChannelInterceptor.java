@@ -49,7 +49,6 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 throw new IllegalArgumentException("❌ 유효하지 않은 JWT 토큰입니다.", e);
             }
         }
-
         return message;
     }
 }
