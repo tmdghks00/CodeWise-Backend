@@ -1,17 +1,11 @@
 package com.codewise.controller;
 
-import com.codewise.domain.AnalysisResult;
 import com.codewise.dto.AnalysisResultDto;
-import com.codewise.exception.CustomException;
 import com.codewise.service.AnalysisResultService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
-import java.util.List;
-
-@RestController // 이 클래스가 RESTful API 를 제공하는 컨트롤러임을 명시
+@RestController
 @RequestMapping("/analysis") // "/analysis" 경로로 들어오는 모든 요청을 처리
 public class AnalysisResultController { // 분석 결과 관련 API 요청을 처리하는 컨트롤러
 
