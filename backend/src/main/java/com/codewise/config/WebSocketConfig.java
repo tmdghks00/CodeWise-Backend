@@ -17,8 +17,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer { // We
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // topic: 브로드캐스트용
-        // queue: 사용자 개별 메시징용 (점대점)
+        // topic: 브로드캐스트용 , queue: 사용자 개별 메시징용 (점대점)
         registry.enableSimpleBroker("/topic", "/queue"); // queue 추가
         registry.setApplicationDestinationPrefixes("/app");
     }
