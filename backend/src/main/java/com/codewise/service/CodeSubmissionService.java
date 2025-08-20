@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Service
 public class CodeSubmissionService {
     // 사용자 제출 코드 저장, 조회, 삭제 등의 비즈니스 로직을 처리하는 서비스 클래스
