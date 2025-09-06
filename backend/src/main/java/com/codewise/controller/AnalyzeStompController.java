@@ -35,13 +35,19 @@ public class AnalyzeStompController {
                         Principal principal,
                         SimpMessageHeaderAccessor accessor) {
 
-        // principal이 있으면 이메일, 없으면 세션ID를 사용
-        String userKey = (principal != null) ? principal.getName()
-                : accessor.getSessionId();
+        String userKey;
+
+        if (principal != null) {
+            userKey = principal.getName();
+            System.out.println(">>> [AnalyzeStompController] principal = " + userKey);
+        } else {
+            userKey = accessor.getSessionId(); // fallback
+            System.out.println(">>> [AnalyzeStompController] principal is null, using sessionId = " + userKey);
+        }
 
         aiServerClient.analyze(req).subscribe(result -> {
             try {
-                // DB 저장
+                // DB 저장 시도
                 analysisResultService.saveNewResult(
                         userKey,
                         req.code(),
@@ -53,17 +59,16 @@ public class AnalyzeStompController {
                 if (principal != null) {
                     messaging.convertAndSendToUser(userKey, "/queue/result", result);
                 } else {
-                    messaging.convertAndSendToUser(
-                            userKey, "/queue/result", result, headersForSession(userKey));
+                    messaging.convertAndSendToUser(userKey, "/queue/result", result, headersForSession(userKey));
                 }
 
             } catch (Exception e) {
+                System.out.println(">>> [AnalyzeStompController] DB 저장 실패: " + e.getMessage());
                 Map<String, Object> error = Map.of("error", "DB 저장 실패: " + e.getMessage());
                 if (principal != null) {
                     messaging.convertAndSendToUser(userKey, "/queue/result", error);
                 } else {
-                    messaging.convertAndSendToUser(
-                            userKey, "/queue/result", error, headersForSession(userKey));
+                    messaging.convertAndSendToUser(userKey, "/queue/result", error, headersForSession(userKey));
                 }
             }
         }, err -> {
@@ -71,9 +76,9 @@ public class AnalyzeStompController {
             if (principal != null) {
                 messaging.convertAndSendToUser(userKey, "/queue/result", error);
             } else {
-                messaging.convertAndSendToUser(
-                        userKey, "/queue/result", error, headersForSession(userKey));
+                messaging.convertAndSendToUser(userKey, "/queue/result", error, headersForSession(userKey));
             }
         });
     }
+
 }
