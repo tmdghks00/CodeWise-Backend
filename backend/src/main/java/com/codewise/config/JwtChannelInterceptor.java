@@ -12,14 +12,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class JwtChannelInterceptor implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
-    private final UserDetailsService userDetailsService; // ★ DB 사용자 로드용
+    private final UserDetailsService userDetailsService;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -32,26 +30,23 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 throw new IllegalArgumentException("❌ JWT 토큰이 누락되었거나 잘못된 형식입니다.");
             }
 
-            token = token.substring(7); // "Bearer " 제거
+            token = token.substring(7);
 
             try {
-                String email = jwtUtil.getUsername(token); // JWT에서 email 추출
+                // JWT에서 이메일 추출
+                String email = jwtUtil.getUsername(token);
 
-                if (email == null) {
-                    throw new IllegalArgumentException("❌ JWT 토큰에 사용자 정보가 없습니다.");
-                }
-
-                // ★ DB에서 사용자 조회
+                // DB에서 사용자 정보 로드
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                // Authentication 객체 생성 (Principal에 UserDetails 들어감)
-                UsernamePasswordAuthenticationToken authentication =
+                // Authentication 객체 생성 후 Principal 세팅
+                UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities()
-                        );
+                                userDetails, null, userDetails.getAuthorities());
 
-                accessor.setUser(authentication); // ★ Principal 세팅
-                System.out.println(">>> [JwtChannelInterceptor] Principal set with email = " + email);
+                accessor.setUser(auth);
+
+                System.out.println(">>> [JwtChannelInterceptor] Principal 세팅 완료: " + email);
 
             } catch (Exception e) {
                 throw new IllegalArgumentException("❌ 유효하지 않은 JWT 토큰입니다.", e);
