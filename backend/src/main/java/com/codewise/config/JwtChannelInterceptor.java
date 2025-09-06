@@ -1,31 +1,30 @@
 package com.codewise.config;
 
 import com.codewise.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class JwtChannelInterceptor implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
-
-    public JwtChannelInterceptor(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
+    private final UserDetailsService userDetailsService; // ★ DB 사용자 로드용
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        // STOMP 헤더 접근
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        // CONNECT 시 JWT 검증
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             String token = accessor.getFirstNativeHeader("Authorization");
 
@@ -36,14 +35,23 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             token = token.substring(7); // "Bearer " 제거
 
             try {
-                // 여기서는 getUsername 사용
-                String username = jwtUtil.getUsername(token);
+                String email = jwtUtil.getUsername(token); // JWT에서 email 추출
 
-                if (username == null) {
+                if (email == null) {
                     throw new IllegalArgumentException("❌ JWT 토큰에 사용자 정보가 없습니다.");
                 }
 
-                accessor.setUser(new UsernamePasswordAuthenticationToken(username, null, List.of()));
+                // ★ DB에서 사용자 조회
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                // Authentication 객체 생성 (Principal에 UserDetails 들어감)
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities()
+                        );
+
+                accessor.setUser(authentication); // ★ Principal 세팅
+                System.out.println(">>> [JwtChannelInterceptor] Principal set with email = " + email);
 
             } catch (Exception e) {
                 throw new IllegalArgumentException("❌ 유효하지 않은 JWT 토큰입니다.", e);
