@@ -10,6 +10,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class JwtAuthenticationFilter extends GenericFilter { // JWT 토큰을 검증하여 인증 필터링 수행
 
@@ -25,11 +26,13 @@ public class JwtAuthenticationFilter extends GenericFilter { // JWT 토큰을 �
         HttpServletRequest request = (HttpServletRequest) req;
         String token = jwtUtil.resolveToken(request); // HTTP 요청에서 JWT 토큰을 추출
         if (token != null && jwtUtil.validateToken(token)) { // 토큰이 존재하고 유효한 경우에만 인증 처리
-            String username = jwtUtil.getUsername(token);
+            String email = jwtUtil.getEmail(token);
+
             UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(username, null, null);
+                    new UsernamePasswordAuthenticationToken(email, null, new ArrayList<>());
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);
+
         }
 
         chain.doFilter(req, res);
