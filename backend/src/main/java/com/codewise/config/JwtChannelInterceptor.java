@@ -2,6 +2,8 @@ package com.codewise.config;
 
 import com.codewise.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -11,9 +13,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component
 @RequiredArgsConstructor
@@ -41,15 +40,15 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             log.info("추출된 JWT 토큰: {}", token);
 
             try {
-                // JWT에서 이메일 추출
+                // JWT에서 이메일 추출 (sub 클레임이 email)
                 String email = jwtUtil.getUsername(token);
-                log.info("JWT에서 추출된 이메일: {}", email);
+                log.info("[JwtChannelInterceptor] JWT에서 추출된 email(sub): {}", email);
 
-                // DB에서 사용자 정보 로드
+                // DB에서 사용자 정보 확인
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 log.debug("DB에서 사용자 정보 로드 성공: {}", userDetails.getUsername());
 
-                // email을 Principal 값으로 직접 세팅
+                // Authentication 객체를 email 기준으로 세팅
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 email, null, userDetails.getAuthorities());
@@ -58,7 +57,7 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 log.info(">>> [JwtChannelInterceptor] Principal 세팅 완료: {}", email);
 
             } catch (Exception e) {
-                log.error("❌ 유효하지 않은 JWT 토큰 또는 사용자 정보 로드 실패.", e); // e를 추가하여 스택 트레이스 출력
+                log.error("❌ JWT 검증 실패 또는 사용자 정보 로드 실패.", e);
                 throw new IllegalArgumentException("❌ 유효하지 않은 JWT 토큰입니다.", e);
             }
         }

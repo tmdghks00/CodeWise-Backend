@@ -25,7 +25,6 @@ public class AnalyzeStompController {
     private final SimpMessagingTemplate messaging;
     private final AnalysisResultService analysisResultService;
 
-    // 세션ID 기반 메시지 헤더 생성 (principal이 null일 때 사용)
     private org.springframework.messaging.MessageHeaders headersForSession(String sessionId) {
         SimpMessageHeaderAccessor accessor =
                 SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
@@ -42,11 +41,11 @@ public class AnalyzeStompController {
         String userKey;
 
         if (principal != null) {
-            userKey = principal.getName();
-            log.info(">>> [AnalyzeStompController] principal = {}", userKey);
+            userKey = principal.getName(); // JwtChannelInterceptor 에서 email 세팅됨
+            log.info(">>> [AnalyzeStompController] principal(email) = {}", userKey);
         } else {
-            userKey = accessor.getSessionId(); // fallback
-            log.warn(">>> [AnalyzeStompController] principal is null, using sessionId = {}", userKey);
+            userKey = accessor.getSessionId();
+            log.warn(">>> [AnalyzeStompController] principal is null, fallback sessionId = {}", userKey);
         }
 
         aiServerClient.analyze(req).subscribe(result -> {
@@ -66,7 +65,6 @@ public class AnalyzeStompController {
                 } else {
                     messaging.convertAndSendToUser(userKey, "/queue/result", result, headersForSession(userKey));
                 }
-                log.debug(">>> [AnalyzeStompController] 결과 전송 완료. userKey={}", userKey);
 
             } catch (Exception e) {
                 log.error(">>> [AnalyzeStompController] DB 저장 실패. userKey={}", userKey, e);
