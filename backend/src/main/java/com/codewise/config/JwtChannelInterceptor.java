@@ -49,14 +49,13 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 log.debug("DB에서 사용자 정보 로드 성공: {}", userDetails.getUsername());
 
-                // Authentication 객체 생성 후 Principal 세팅
+                // email을 Principal 값으로 직접 세팅
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                                email, null, userDetails.getAuthorities());
 
                 accessor.setUser(auth);
-
-                System.out.println(">>> [JwtChannelInterceptor] Principal 세팅 완료: " + email);
+                log.info(">>> [JwtChannelInterceptor] Principal 세팅 완료: {}", email);
 
             } catch (Exception e) {
                 log.error("❌ 유효하지 않은 JWT 토큰 또는 사용자 정보 로드 실패.", e); // e를 추가하여 스택 트레이스 출력
