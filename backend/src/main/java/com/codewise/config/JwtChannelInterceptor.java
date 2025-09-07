@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 public class JwtChannelInterceptor implements ChannelInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(JwtChannelInterceptor.class);
-
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
