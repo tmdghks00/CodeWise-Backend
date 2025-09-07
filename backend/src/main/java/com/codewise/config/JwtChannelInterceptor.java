@@ -1,5 +1,8 @@
 package com.codewise.config;
 
+import com.codewise.domain.User;
+import com.codewise.domain.UserRole;
+import com.codewise.repository.UserRepository;
 import com.codewise.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -13,14 +16,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Component
 @RequiredArgsConstructor
 public class JwtChannelInterceptor implements ChannelInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(JwtChannelInterceptor.class);
+
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository; // ✅ 추가
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -39,15 +45,32 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             log.info("추출된 JWT 토큰: {}", token);
 
             try {
-                // JWT에서 email 꺼내기
+                // JWT에서 email 추출
                 String email = jwtUtil.getEmail(token);
                 log.info("[JwtChannelInterceptor] JWT에서 추출된 email: {}", email);
 
-                // DB에서 사용자 정보 확인
+                // ✅ DB 사용자 존재 여부 확인
+                if (!userRepository.existsByEmail(email)) {
+                    log.warn("DB에 사용자 없음. 자동 등록 진행: {}", email);
+
+                    User newUser = new User();
+                    newUser.setEmail(email);
+
+                    // 비밀번호를 "test1234"로 설정 (BCrypt 암호화)
+                    String rawPassword = "test1234";
+                    String encodedPassword = new BCryptPasswordEncoder().encode(rawPassword);
+                    newUser.setPassword(encodedPassword);
+
+                    newUser.setRole(UserRole.USER);
+                    userRepository.save(newUser);
+                }
+
+
+                // DB에서 사용자 정보 로드
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 log.debug("DB에서 사용자 정보 로드 성공: {}", userDetails.getUsername());
 
-                // Authentication 객체 세팅 (Principal = email)
+                // Authentication 객체 세팅
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 email, null, userDetails.getAuthorities());
