@@ -4,6 +4,8 @@ import com.codewise.dto.AnalyzeRequest;
 import com.codewise.service.AiServerClient;
 import com.codewise.service.AnalysisResultService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
@@ -16,6 +18,8 @@ import java.util.Map;
 @Controller
 @RequiredArgsConstructor
 public class AnalyzeStompController {
+
+    private static final Logger log = LoggerFactory.getLogger(AnalyzeStompController.class);
 
     private final AiServerClient aiServerClient;
     private final SimpMessagingTemplate messaging;
@@ -39,10 +43,10 @@ public class AnalyzeStompController {
 
         if (principal != null) {
             userKey = principal.getName();
-            System.out.println(">>> [AnalyzeStompController] principal = " + userKey);
+            log.info(">>> [AnalyzeStompController] principal = {}", userKey);
         } else {
             userKey = accessor.getSessionId(); // fallback
-            System.out.println(">>> [AnalyzeStompController] principal is null, using sessionId = " + userKey);
+            log.warn(">>> [AnalyzeStompController] principal is null, using sessionId = {}", userKey);
         }
 
         aiServerClient.analyze(req).subscribe(result -> {
@@ -54,6 +58,7 @@ public class AnalyzeStompController {
                         req.language(),
                         result
                 );
+                log.info(">>> [AnalyzeStompController] DB 저장 성공. userKey={}, lang={}", userKey, req.language());
 
                 // 결과 전송
                 if (principal != null) {
@@ -61,9 +66,10 @@ public class AnalyzeStompController {
                 } else {
                     messaging.convertAndSendToUser(userKey, "/queue/result", result, headersForSession(userKey));
                 }
+                log.debug(">>> [AnalyzeStompController] 결과 전송 완료. userKey={}", userKey);
 
             } catch (Exception e) {
-                System.out.println(">>> [AnalyzeStompController] DB 저장 실패: " + e.getMessage());
+                log.error(">>> [AnalyzeStompController] DB 저장 실패. userKey={}", userKey, e);
                 Map<String, Object> error = Map.of("error", "DB 저장 실패: " + e.getMessage());
                 if (principal != null) {
                     messaging.convertAndSendToUser(userKey, "/queue/result", error);
@@ -72,6 +78,7 @@ public class AnalyzeStompController {
                 }
             }
         }, err -> {
+            log.error(">>> [AnalyzeStompController] AI 서버 호출 실패. userKey={}, err={}", userKey, err.getMessage());
             Map<String, Object> error = Map.of("error", err.getMessage());
             if (principal != null) {
                 messaging.convertAndSendToUser(userKey, "/queue/result", error);
@@ -80,5 +87,4 @@ public class AnalyzeStompController {
             }
         });
     }
-
 }
