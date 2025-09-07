@@ -40,15 +40,15 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             log.info("추출된 JWT 토큰: {}", token);
 
             try {
-                // JWT에서 이메일 추출 (sub 클레임이 email)
-                String email = jwtUtil.getUsername(token);
-                log.info("[JwtChannelInterceptor] JWT에서 추출된 email(sub): {}", email);
+                // JWT에서 email 꺼내기
+                String email = jwtUtil.getEmail(token);
+                log.info("[JwtChannelInterceptor] JWT에서 추출된 email: {}", email);
 
                 // DB에서 사용자 정보 확인
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 log.debug("DB에서 사용자 정보 로드 성공: {}", userDetails.getUsername());
 
-                // Authentication 객체를 email 기준으로 세팅
+                // Authentication 객체 세팅 (Principal = email)
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 email, null, userDetails.getAuthorities());
