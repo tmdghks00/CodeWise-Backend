@@ -11,7 +11,6 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.security.Principal;
 import java.util.Map;
@@ -39,39 +38,51 @@ public class AnalyzeStompController {
                         Principal principal,
                         SimpMessageHeaderAccessor accessor) {
 
-        String email;
+        String userKey;
 
-        if (principal instanceof UsernamePasswordAuthenticationToken auth) {
-            email = (String) auth.getPrincipal(); // JwtChannelInterceptor에서 세팅한 email
-            log.info(">>> [AnalyzeStompController] principal(email) = {}", email);
+        if (principal != null) {
+            userKey = principal.getName(); // JwtChannelInterceptor 에서 email 세팅됨
+            log.info(">>> [AnalyzeStompController] principal(email) = {}", userKey);
         } else {
-            email = accessor.getSessionId(); // fallback
-            log.warn(">>> [AnalyzeStompController] principal is null, fallback sessionId = {}", email);
+            userKey = accessor.getSessionId();
+            log.warn(">>> [AnalyzeStompController] principal is null, fallback sessionId = {}", userKey);
         }
 
         aiServerClient.analyze(req).subscribe(result -> {
             try {
-                // DB 저장
+                // DB 저장 시도
                 analysisResultService.saveNewResult(
-                        email,
+                        userKey,
                         req.code(),
                         req.language(),
                         result
                 );
-                log.info(">>> [AnalyzeStompController] DB 저장 성공. email={}, lang={}", email, req.language());
+                log.info(">>> [AnalyzeStompController] DB 저장 성공. userKey={}, lang={}", userKey, req.language());
 
                 // 결과 전송
-                messaging.convertAndSendToUser(email, "/queue/result", result);
+                if (principal != null) {
+                    messaging.convertAndSendToUser(userKey, "/queue/result", result);
+                } else {
+                    messaging.convertAndSendToUser(userKey, "/queue/result", result, headersForSession(userKey));
+                }
 
             } catch (Exception e) {
-                log.error(">>> [AnalyzeStompController] DB 저장 실패. email={}", email, e);
+                log.error(">>> [AnalyzeStompController] DB 저장 실패. userKey={}", userKey, e);
                 Map<String, Object> error = Map.of("error", "DB 저장 실패: " + e.getMessage());
-                messaging.convertAndSendToUser(email, "/queue/result", error);
+                if (principal != null) {
+                    messaging.convertAndSendToUser(userKey, "/queue/result", error);
+                } else {
+                    messaging.convertAndSendToUser(userKey, "/queue/result", error, headersForSession(userKey));
+                }
             }
         }, err -> {
-            log.error(">>> [AnalyzeStompController] AI 서버 호출 실패. email={}, err={}", email, err.getMessage());
+            log.error(">>> [AnalyzeStompController] AI 서버 호출 실패. userKey={}, err={}", userKey, err.getMessage());
             Map<String, Object> error = Map.of("error", err.getMessage());
-            messaging.convertAndSendToUser(email, "/queue/result", error);
+            if (principal != null) {
+                messaging.convertAndSendToUser(userKey, "/queue/result", error);
+            } else {
+                messaging.convertAndSendToUser(userKey, "/queue/result", error, headersForSession(userKey));
+            }
         });
     }
 }

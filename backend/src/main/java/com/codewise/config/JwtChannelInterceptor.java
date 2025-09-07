@@ -40,21 +40,21 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             log.info("추출된 JWT 토큰: {}", token);
 
             try {
-                // JWT에서 이메일 추출
+                // JWT에서 이메일 추출 (sub 클레임이 email)
                 String email = jwtUtil.getUsername(token);
                 log.info("[JwtChannelInterceptor] JWT에서 추출된 email(sub): {}", email);
 
-                // DB 사용자 확인
+                // DB에서 사용자 정보 확인
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 log.debug("DB에서 사용자 정보 로드 성공: {}", userDetails.getUsername());
 
-                // Principal 을 email 문자열로 강제 세팅
+                // Authentication 객체를 email 기준으로 세팅
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 email, null, userDetails.getAuthorities());
 
                 accessor.setUser(auth);
-                log.info(">>> [JwtChannelInterceptor] Principal 세팅 완료 (email): {}", email);
+                log.info(">>> [JwtChannelInterceptor] Principal 세팅 완료: {}", email);
 
             } catch (Exception e) {
                 log.error("❌ JWT 검증 실패 또는 사용자 정보 로드 실패.", e);
