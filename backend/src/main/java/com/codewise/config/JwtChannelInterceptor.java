@@ -73,10 +73,10 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                 log.info("✅ DB에서 UserDetails 로드 성공: {}", userDetails.getUsername());
 
-                // Authentication 객체 세팅 (Principal = userDetails)
+                // Authentication 객체 세팅
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                                email, null, userDetails.getAuthorities());
 
                 accessor.setUser(auth);
                 log.info("🎯 Principal 세팅 완료: {}", auth.getName());
