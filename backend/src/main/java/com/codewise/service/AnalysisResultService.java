@@ -31,6 +31,38 @@ public class AnalysisResultService {
     private final CodeSubmissionRepository codeSubmissionRepository;
     private final UserRepository userRepository;
 
+    /**
+     * null-safe Double 변환
+     */
+    private Double toDouble(Object value) {
+        if (value == null) return 0.0;
+        if (value instanceof Number num) {
+            return num.doubleValue();
+        }
+        try {
+            return Double.parseDouble(value.toString());
+        } catch (Exception e) {
+            log.warn("⚠️ Double 변환 실패, 기본값 0 사용. value={}", value);
+            return 0.0;
+        }
+    }
+
+    /**
+     * null-safe Integer 변환
+     */
+    private Integer toInt(Object value) {
+        if (value == null) return 0;
+        if (value instanceof Number num) {
+            return num.intValue();
+        }
+        try {
+            return Integer.parseInt(value.toString());
+        } catch (Exception e) {
+            log.warn("⚠️ Integer 변환 실패, 기본값 0 사용. value={}", value);
+            return 0;
+        }
+    }
+
     public void saveNewResult(String email, String code, String language, AnalyzeResponse aiResponse) {
         // 1. 사용자 조회 → 없으면 자동 등록
         User user = userRepository.findByEmail(email).orElseGet(() -> {
@@ -50,15 +82,20 @@ public class AnalysisResultService {
                 .build();
         codeSubmissionRepository.save(submission);
 
-        // 3. AI 응답 기반 AnalysisResult 생성 및 저장
+        // 3. AI 응답 기반 AnalysisResult 생성 및 저장 (null-safe)
+        Double maintainability = toDouble(aiResponse.metrics().get("maintainability"));
+        Double readability = toDouble(aiResponse.metrics().get("readability"));
+        Double bugProbability = toDouble(aiResponse.metrics().get("bug_probability"));
+        Integer score = toInt(aiResponse.metrics().get("score"));
+
         AnalysisResult analysisResult = AnalysisResult.builder()
                 .codeSubmission(submission)
-                .maintainabilityScore((Double) aiResponse.metrics().get("maintainability"))
-                .readabilityScore((Double) aiResponse.metrics().get("readability"))
-                .bugProbability((Double) aiResponse.metrics().get("bug_probability"))
+                .maintainabilityScore(maintainability)
+                .readabilityScore(readability)
+                .bugProbability(bugProbability)
                 .summary(aiResponse.summary())
-                .suggestions(aiResponse.issues().toString())
-                .score((Integer) aiResponse.metrics().get("score"))
+                .suggestions(aiResponse.issues() != null ? aiResponse.issues().toString() : "")
+                .score(score)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -70,18 +107,24 @@ public class AnalysisResultService {
         CodeSubmission codeSubmission = codeSubmissionRepository.findById(submissionId)
                 .orElseThrow(() -> new IllegalArgumentException("제출 코드를 찾을 수 없습니다."));
 
+        Double maintainability = toDouble(aiResponse.metrics().get("maintainability"));
+        Double readability = toDouble(aiResponse.metrics().get("readability"));
+        Double bugProbability = toDouble(aiResponse.metrics().get("bug_probability"));
+        Integer score = toInt(aiResponse.metrics().get("score"));
+
         AnalysisResult analysisResult = AnalysisResult.builder()
                 .codeSubmission(codeSubmission)
-                .maintainabilityScore((Double) aiResponse.metrics().get("maintainability"))
-                .readabilityScore((Double) aiResponse.metrics().get("readability"))
-                .bugProbability((Double) aiResponse.metrics().get("bug_probability"))
+                .maintainabilityScore(maintainability)
+                .readabilityScore(readability)
+                .bugProbability(bugProbability)
                 .summary(aiResponse.summary())
-                .suggestions(aiResponse.issues().toString())
-                .score((Integer) aiResponse.metrics().get("score"))
+                .suggestions(aiResponse.issues() != null ? aiResponse.issues().toString() : "")
+                .score(score)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         analysisResultRepository.save(analysisResult);
+        log.info("✅ [AnalysisResultService] 결과 저장 완료 (기존 submissionId={})", submissionId);
     }
 
     public AnalysisResultDto getResultBySubmissionId(Long id) {
