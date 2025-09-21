@@ -8,6 +8,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AnalysisResultDto { // 클라이언트에 전달할 분석 결과 데이터를 담는 DTO 클래스
     private Long id;                     // 분석 결과의 고유 식별자
+    private Long submissionId;
+    private Long userId;
     private double maintainabilityScore; // 코드 유지보수성 점수
     private double readabilityScore;     // 코드 가독성 점수
     private double bugProbability;       // 코드 버그 발생 확률
@@ -17,6 +19,9 @@ public class AnalysisResultDto { // 클라이언트에 전달할 분석 결과 �
     public static AnalysisResultDto fromEntity(AnalysisResult result) {
         return new AnalysisResultDto(
                 result.getId(),
+                result.getCodeSubmission() != null ? result.getCodeSubmission().getId() : null,
+                result.getCodeSubmission() != null && result.getCodeSubmission().getUser() != null
+                        ? result.getCodeSubmission().getUser().getId() : null,
                 result.getMaintainabilityScore(),
                 result.getReadabilityScore(),
                 result.getBugProbability(),

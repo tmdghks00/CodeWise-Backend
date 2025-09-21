@@ -6,8 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/analysis") // "/analysis" 경로로 들어오는 모든 요청을 처리
-public class AnalysisResultController { // 분석 결과 관련 API 요청을 처리하는 컨트롤러
+@RequestMapping("/analysis")
+public class AnalysisResultController {
 
     private final AnalysisResultService analysisResultService;
 
@@ -15,15 +15,23 @@ public class AnalysisResultController { // 분석 결과 관련 API 요청을 �
         this.analysisResultService = analysisResultService;
     }
 
-    // "/analysis/result/{submissionId}" 경로의 GET 요청 처리 (특정 제출 ID의 분석 결과 조회)
     @GetMapping("/result/{submissionId}")
     public ResponseEntity<AnalysisResultDto> getResult(@PathVariable Long submissionId) {
         return ResponseEntity.ok(analysisResultService.getResultBySubmissionId(submissionId));
     }
 
-    // "/analysis/{id}" 경로의 GET 요청 처리 (특정 ID의 분석 결과 조회)
     @GetMapping("/{id}")
     public ResponseEntity<AnalysisResultDto> getAnalysisById(@PathVariable Long id) {
         return ResponseEntity.ok(analysisResultService.getAnalysisById(id));
+    }
+
+    // submissionId + userId 조합
+    @GetMapping("/result/{submissionId}/user/{userId}")
+    public ResponseEntity<AnalysisResultDto> getResultForUser(
+            @PathVariable Long submissionId,
+            @PathVariable Long userId) {
+        return ResponseEntity.ok(
+                analysisResultService.getResultBySubmissionIdAndUserId(submissionId, userId)
+        );
     }
 }

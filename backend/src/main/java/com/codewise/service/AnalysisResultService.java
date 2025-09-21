@@ -31,50 +31,29 @@ public class AnalysisResultService {
     private final CodeSubmissionRepository codeSubmissionRepository;
     private final UserRepository userRepository;
 
-    /**
-     * null-safe Double 변환
-     */
     private Double toDouble(Object value) {
         if (value == null) return 0.0;
-        if (value instanceof Number num) {
-            return num.doubleValue();
-        }
-        try {
-            return Double.parseDouble(value.toString());
-        } catch (Exception e) {
-            log.warn("⚠️ Double 변환 실패, 기본값 0 사용. value={}", value);
-            return 0.0;
-        }
+        if (value instanceof Number num) return num.doubleValue();
+        try { return Double.parseDouble(value.toString()); }
+        catch (Exception e) { return 0.0; }
     }
 
-    /**
-     * null-safe Integer 변환
-     */
     private Integer toInt(Object value) {
         if (value == null) return 0;
-        if (value instanceof Number num) {
-            return num.intValue();
-        }
-        try {
-            return Integer.parseInt(value.toString());
-        } catch (Exception e) {
-            log.warn("⚠️ Integer 변환 실패, 기본값 0 사용. value={}", value);
-            return 0;
-        }
+        if (value instanceof Number num) return num.intValue();
+        try { return Integer.parseInt(value.toString()); }
+        catch (Exception e) { return 0; }
     }
 
     public void saveNewResult(String email, String code, String language, AnalyzeResponse aiResponse) {
-        // 1. 사용자 조회 → 없으면 자동 등록
         User user = userRepository.findByEmail(email).orElseGet(() -> {
-            log.warn("⚠️ [AnalysisResultService] 사용자 없음 → 자동 등록 진행: {}", email);
             User newUser = new User();
             newUser.setEmail(email);
-            newUser.setPassword(new BCryptPasswordEncoder().encode("test1234")); // fallback 기본 패스워드
+            newUser.setPassword(new BCryptPasswordEncoder().encode("test1234"));
             newUser.setRole(UserRole.USER);
             return userRepository.save(newUser);
         });
 
-        // 2. 새 CodeSubmission 생성 및 저장
         CodeSubmission submission = CodeSubmission.builder()
                 .user(user)
                 .code(code)
@@ -82,49 +61,36 @@ public class AnalysisResultService {
                 .build();
         codeSubmissionRepository.save(submission);
 
-        // 3. AI 응답 기반 AnalysisResult 생성 및 저장 (null-safe)
-        Double maintainability = toDouble(aiResponse.metrics().get("maintainability"));
-        Double readability = toDouble(aiResponse.metrics().get("readability"));
-        Double bugProbability = toDouble(aiResponse.metrics().get("bug_probability"));
-        Integer score = toInt(aiResponse.metrics().get("score"));
-
         AnalysisResult analysisResult = AnalysisResult.builder()
                 .codeSubmission(submission)
-                .maintainabilityScore(maintainability)
-                .readabilityScore(readability)
-                .bugProbability(bugProbability)
+                .maintainabilityScore(toDouble(aiResponse.metrics().get("maintainability")))
+                .readabilityScore(toDouble(aiResponse.metrics().get("readability")))
+                .bugProbability(toDouble(aiResponse.metrics().get("bug_probability")))
                 .summary(aiResponse.summary())
                 .suggestions(aiResponse.issues() != null ? aiResponse.issues().toString() : "")
-                .score(score)
+                .score(toInt(aiResponse.metrics().get("score")))
                 .createdAt(LocalDateTime.now())
                 .build();
 
         analysisResultRepository.save(analysisResult);
-        log.info("✅ [AnalysisResultService] 결과 저장 완료. email={}, submissionId={}", email, submission.getId());
     }
 
     public void saveResultFromAiResponse(Long submissionId, AnalyzeResponse aiResponse) {
         CodeSubmission codeSubmission = codeSubmissionRepository.findById(submissionId)
                 .orElseThrow(() -> new IllegalArgumentException("제출 코드를 찾을 수 없습니다."));
 
-        Double maintainability = toDouble(aiResponse.metrics().get("maintainability"));
-        Double readability = toDouble(aiResponse.metrics().get("readability"));
-        Double bugProbability = toDouble(aiResponse.metrics().get("bug_probability"));
-        Integer score = toInt(aiResponse.metrics().get("score"));
-
         AnalysisResult analysisResult = AnalysisResult.builder()
                 .codeSubmission(codeSubmission)
-                .maintainabilityScore(maintainability)
-                .readabilityScore(readability)
-                .bugProbability(bugProbability)
+                .maintainabilityScore(toDouble(aiResponse.metrics().get("maintainability")))
+                .readabilityScore(toDouble(aiResponse.metrics().get("readability")))
+                .bugProbability(toDouble(aiResponse.metrics().get("bug_probability")))
                 .summary(aiResponse.summary())
                 .suggestions(aiResponse.issues() != null ? aiResponse.issues().toString() : "")
-                .score(score)
+                .score(toInt(aiResponse.metrics().get("score")))
                 .createdAt(LocalDateTime.now())
                 .build();
 
         analysisResultRepository.save(analysisResult);
-        log.info("✅ [AnalysisResultService] 결과 저장 완료 (기존 submissionId={})", submissionId);
     }
 
     public AnalysisResultDto getResultBySubmissionId(Long id) {
@@ -134,6 +100,16 @@ public class AnalysisResultService {
                 .orElseThrow(() -> new IllegalArgumentException("분석 결과 없음"));
         return AnalysisResultDto.fromEntity(result);
     }
+
+    // submissionId + userId 조합 조회
+    public AnalysisResultDto getResultBySubmissionIdAndUserId(Long submissionId, Long userId) {
+        AnalysisResult result = analysisResultRepository
+                .findByCodeSubmission_IdAndCodeSubmission_User_Id(submissionId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("분석 결과 없음"));
+        return AnalysisResultDto.fromEntity(result);
+    }
+
+    // 기존 메서드들(getAllResultsForUser, getUserHistory, getFilteredAndSortedUserHistory 등) 그대로 유지
 
     public List<AnalysisResultDto> getAllResultsForUser(String email) {
         return analysisResultRepository.findAllByCodeSubmission_User_Email(email).stream()

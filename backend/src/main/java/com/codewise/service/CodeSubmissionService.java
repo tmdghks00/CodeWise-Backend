@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class CodeSubmissionService {
-    // 사용자 제출 코드 저장, 조회, 삭제 등의 비즈니스 로직을 처리하는 서비스 클래스
 
     private final CodeSubmissionRepository codeSubmissionRepository;
     private final UserRepository userRepository;
@@ -25,9 +24,9 @@ public class CodeSubmissionService {
         this.userRepository = userRepository;
     }
 
-    // 이메일 기반으로 사용자 조회 및 코드 제출 저장
-    public void submitCode(String email, CodeSubmissionDto dto) {
-        User user = userRepository.findByEmail(email)
+    // userId 기반 코드 제출
+    public void submitCode(Long userId, CodeSubmissionDto dto) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
 
         CodeSubmission submission = CodeSubmission.builder()
@@ -40,23 +39,20 @@ public class CodeSubmissionService {
         codeSubmissionRepository.save(submission);
     }
 
-    // 코드 ID로 코드 조회
     public CodeSubmissionDto getCodeById(Long id) {
         CodeSubmission sub = codeSubmissionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("코드 없음"));
-        return new CodeSubmissionDto(sub.getId(), sub.getCode(), sub.getLanguage());
+        return CodeSubmissionDto.fromEntity(sub);
     }
 
-    // 코드 ID로 코드 삭제
     public void deleteCode(Long id) {
         codeSubmissionRepository.deleteById(id);
     }
 
-    // 로그인한 사용자의 제출 코드를 조회하는 메서드
-    public List<CodeSubmissionDto> getSubmissionsByUser(String email) {
-        User user = userRepository.findByEmail(email)
+    // userId 기반 제출 목록 조회
+    public List<CodeSubmissionDto> getSubmissionsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다."));
-
         List<CodeSubmission> list = codeSubmissionRepository.findAllByUser(user);
         return list.stream().map(CodeSubmissionDto::fromEntity).collect(Collectors.toList());
     }
