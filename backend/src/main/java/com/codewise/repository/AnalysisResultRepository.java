@@ -23,7 +23,8 @@ public interface AnalysisResultRepository extends JpaRepository<AnalysisResult, 
 
     @Modifying
     @Query("DELETE FROM AnalysisResult ar WHERE ar.codeSubmission.user = :user")
-    void deleteAllByUser(@Param("user") User user);
+    void deleteAllByCodeSubmission_User(@Param("user") User user);
+
 
     // submissionId + userId 조합 조회
     Optional<AnalysisResult> findByCodeSubmission_IdAndCodeSubmission_User_Id(Long submissionId, Long userId);

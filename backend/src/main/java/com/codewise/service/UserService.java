@@ -46,13 +46,13 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
 
-        // 1단계: 분석 결과 삭제
-        analysisResultRepository.deleteAllByUser(user);
+        // 1. 분석 결과 먼저 삭제 (연관관계상 AnalysisResult → CodeSubmission 순서)
+        analysisResultRepository.deleteAllByCodeSubmission_User(user);
 
-        // 2단계: 코드 제출 삭제
+        // 2. 코드 제출 삭제
         codeSubmissionRepository.deleteAllByUser(user);
 
-        // 3단계: 유저 삭제
+        // 3. 유저 삭제
         userRepository.delete(user);
     }
 
