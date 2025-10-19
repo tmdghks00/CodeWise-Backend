@@ -5,7 +5,10 @@ import com.codewise.dto.AnalysisResultDto;
 import com.codewise.dto.AnalysisResultFilterRequestDto;
 import com.codewise.dto.SignupRequestDto;
 import com.codewise.exception.CustomException;
+import com.codewise.repository.AnalysisResultRepository;
+import com.codewise.repository.CodeSubmissionRepository;
 import com.codewise.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -17,13 +20,19 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CodeSubmissionRepository codeSubmissionRepository;
+    private final AnalysisResultRepository analysisResultRepository;
     private final AnalysisResultService analysisResultService;
 
-    public UserService(UserRepository userRepository, // 생성자 주입을 통해 의존성 초기화
+    public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       AnalysisResultService analysisResultService) {
+                       CodeSubmissionRepository codeSubmissionRepository,
+                       AnalysisResultRepository analysisResultRepository,
+        AnalysisResultService analysisResultService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.codeSubmissionRepository = codeSubmissionRepository;
+        this.analysisResultRepository = analysisResultRepository;
         this.analysisResultService = analysisResultService;
     }
 
@@ -32,9 +41,18 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
     }
 
-    public void deleteUser(String email) { // 이메일로 사용자 계정을 삭제하는 메서드
+    @Transactional
+    public void deleteUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+
+        // 1단계: 분석 결과 삭제
+        analysisResultRepository.deleteAllByUser(user);
+
+        // 2단계: 코드 제출 삭제
+        codeSubmissionRepository.deleteAllByUser(user);
+
+        // 3단계: 유저 삭제
         userRepository.delete(user);
     }
 
