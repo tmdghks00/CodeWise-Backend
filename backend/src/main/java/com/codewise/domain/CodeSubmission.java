@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Entity
@@ -27,5 +28,11 @@ public class CodeSubmission { // 사용자가 제출한 코드 정보를 저장�
 
     private String language; // 제출된 코드의 프로그래밍 언어 (예: "Java", "Python")
 
-    private LocalDateTime submittedAt;  // 코드가 제출된 시간
+    private String purpose; // 추가: 코드 제출 목적
+
+    @ElementCollection
+    private List<String> errors; // 추가: 분석된 오류 리스트
+
+    private LocalDateTime submittedAt;
+
 }

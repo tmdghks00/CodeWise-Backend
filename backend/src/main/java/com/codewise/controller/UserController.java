@@ -34,11 +34,4 @@ public class UserController { // 회원 정보 조회, 수정, 삭제 요청을 
         return ResponseEntity.ok("회원 정보가 수정되었습니다.");
     }
 
-    @GetMapping("/history") // "/user/history" 경로의 GET 요청을 처리 (로그인한 사용자의 분석 이력 정렬 조회)
-    public ResponseEntity<?> getSortedHistory(@RequestParam(defaultValue = "id") String sortBy,
-                                              @RequestParam(defaultValue = "desc") String direction,
-                                              @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(userService.getSortedUserHistory(userDetails.getUsername(), sortBy, direction));
-    }
-
 }
