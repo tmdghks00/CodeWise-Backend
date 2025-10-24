@@ -12,6 +12,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/user/history")
@@ -21,46 +23,60 @@ public class HistoryController {
     private final AnalysisHistoryRepository analysisHistoryRepository;
     private final UserRepository userRepository;
 
-    /**
-     * STOMP 결과 수신 시 프론트에서 saveAnalysisHistory()로 호출됨
-     */
     @PostMapping
     public ResponseEntity<String> saveHistory(
             @RequestBody HistoryRequestDto dto,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idemKey
     ) {
         String email = userDetails.getUsername();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime createdAt = dto.getCreatedAt() != null ? dto.getCreatedAt() : LocalDateTime.now();
 
-        // errors 배열 각각 insert
-        if (dto.getErrors() != null && !dto.getErrors().isEmpty()) {
-            dto.getErrors().forEach(err -> {
-                AnalysisHistory history = AnalysisHistory.builder()
+        // IdempotencyKey 중복 방지 (같은 키 중복 insert 방지)
+        if (idemKey != null && analysisHistoryRepository.existsByUserAndIdempotencyKey(user, idemKey)) {
+            return ResponseEntity.ok("Duplicate request ignored");
+        }
+
+        // 에러 목록이 비었을 경우에도 최소 1건 저장
+        List<HistoryRequestDto.ErrorInfo> errors = dto.getErrors();
+        if (errors != null && !errors.isEmpty()) {
+            for (HistoryRequestDto.ErrorInfo e : errors) {
+                AnalysisHistory h = AnalysisHistory.builder()
                         .user(user)
                         .language(dto.getLanguage())
                         .purpose(dto.getPurpose())
-                        .errorType(err.getType())
-                        .errorMessage(err.getMessage())
-                        .createdAt(dto.getCreatedAt() != null ? dto.getCreatedAt() : now)
+                        .errorType(e.getType())
+                        .errorMessage(e.getMessage())
+                        .createdAt(createdAt)
+                        .idempotencyKey(idemKey != null ? idemKey : UUID.randomUUID().toString())
                         .build();
-                analysisHistoryRepository.save(history);
-            });
+                analysisHistoryRepository.save(h);
+            }
         } else {
-            // errors가 비어있어도 기본 1건 저장
-            AnalysisHistory history = AnalysisHistory.builder()
+            AnalysisHistory h = AnalysisHistory.builder()
                     .user(user)
                     .language(dto.getLanguage())
                     .purpose(dto.getPurpose())
                     .errorType(null)
                     .errorMessage(null)
-                    .createdAt(dto.getCreatedAt() != null ? dto.getCreatedAt() : now)
+                    .createdAt(createdAt)
+                    .idempotencyKey(idemKey != null ? idemKey : UUID.randomUUID().toString())
                     .build();
-            analysisHistoryRepository.save(history);
+            analysisHistoryRepository.save(h);
         }
 
         return ResponseEntity.ok("History saved successfully");
+    }
+
+    @GetMapping
+    public ResponseEntity<List<AnalysisHistory>> getUserHistory(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        List<AnalysisHistory> historyList = analysisHistoryRepository.findByUser(user);
+        return ResponseEntity.ok(historyList);
     }
 }
