@@ -1,23 +1,27 @@
 package com.codewise.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class HistoryRequestDto {
-
-    private String language;  // "java"
-    private String purpose;   // "security_hardening"
-    private List<ErrorInfo> errors;
+    private String language;
+    private String purpose;
     private LocalDateTime createdAt;
+    private List<ErrorInfo> errors;
 
     @Getter
     @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ErrorInfo {
-        private String type;     // "error", "warn", "info"
-        private String message;  // "NPE 가능성"
+        private String type;
+        private String message;
     }
 }

@@ -12,8 +12,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user/history")
@@ -79,4 +82,67 @@ public class HistoryController {
         List<AnalysisHistory> historyList = analysisHistoryRepository.findByUser(user);
         return ResponseEntity.ok(historyList);
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getUserStats(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        List<AnalysisHistory> historyList = analysisHistoryRepository.findByUser(user);
+
+        Map<String, Long> langCount = historyList.stream()
+                .filter(h -> h.getLanguage() != null && !h.getLanguage().isEmpty())
+                .collect(Collectors.groupingBy(AnalysisHistory::getLanguage, Collectors.counting()));
+
+        Map<String, Long> purposeCount = historyList.stream()
+                .filter(h -> h.getPurpose() != null && !h.getPurpose().isEmpty())
+                .collect(Collectors.groupingBy(AnalysisHistory::getPurpose, Collectors.counting()));
+
+        Map<String, Long> errorCount = historyList.stream()
+                .filter(h -> h.getErrorMessage() != null && !h.getErrorMessage().isEmpty())
+                .collect(Collectors.groupingBy(AnalysisHistory::getErrorMessage, Collectors.counting()));
+
+        List<Map<String, Object>> topLanguages = langCount.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(5)
+                .map(e -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("language", e.getKey());
+                    m.put("count", e.getValue());
+                    return m;
+                })
+                .collect(Collectors.toList());
+
+        List<Map<String, Object>> topPurposes = purposeCount.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(5)
+                .map(e -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("purpose", e.getKey());
+                    m.put("count", e.getValue());
+                    return m;
+                })
+                .collect(Collectors.toList());
+
+        List<Map<String, Object>> topErrors = errorCount.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(10)
+                .map(e -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("error", e.getKey());
+                    m.put("count", e.getValue());
+                    return m;
+                })
+                .collect(Collectors.toList());
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("topLanguages", topLanguages);
+        stats.put("topPurposes", topPurposes);
+        stats.put("topErrors", topErrors);
+
+        return ResponseEntity.ok(stats);
+    }
+
+
 }
