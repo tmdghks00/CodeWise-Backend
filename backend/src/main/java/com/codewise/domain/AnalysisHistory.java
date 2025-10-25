@@ -19,8 +19,9 @@ public class AnalysisHistory {
 
     // email 기준으로 user 연결
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_email", referencedColumnName = "email", nullable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
+
 
     private String language;
     private String purpose;

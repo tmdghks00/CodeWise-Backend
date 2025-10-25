@@ -6,13 +6,11 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class AnalysisResultDto { // 클라이언트에 전달할 분석 결과 데이터를 담는 DTO 클래스
-    private Long id;                     // 분석 결과의 고유 식별자
-    private Long submissionId;
-    private Long userId;
-    private double maintainabilityScore; // 코드 유지보수성 점수
-    private double readabilityScore;     // 코드 가독성 점수
-    private double bugProbability;       // 코드 버그 발생 확률
+public class AnalysisResultDto {
+    private Long id;                     // 분석 결과 고유 식별자
+    private Long submissionId;           // 코드 제출 ID
+    private Long userId;                 // 사용자 ID
+    private String email;                // 사용자 이메일
     private String summary;              // 분석 결과 요약
     private String suggestions;          // 코드 개선 제안 사항
 
@@ -22,14 +20,10 @@ public class AnalysisResultDto { // 클라이언트에 전달할 분석 결과 �
                 result.getCodeSubmission() != null ? result.getCodeSubmission().getId() : null,
                 result.getCodeSubmission() != null && result.getCodeSubmission().getUser() != null
                         ? result.getCodeSubmission().getUser().getId() : null,
-                result.getMaintainabilityScore(),
-                result.getReadabilityScore(),
-                result.getBugProbability(),
+                result.getCodeSubmission() != null && result.getCodeSubmission().getUser() != null
+                        ? result.getCodeSubmission().getUser().getEmail() : null, // ✅ 추가된 부분
                 result.getSummary(),
                 result.getSuggestions()
         );
     }
-
 }
-
-
