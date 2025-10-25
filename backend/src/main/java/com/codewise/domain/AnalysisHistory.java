@@ -17,16 +17,18 @@ public class AnalysisHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // email 기준으로 user 연결
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_email", referencedColumnName = "email", nullable = false)
     private User user;
 
     private String language;
     private String purpose;
     private String errorType;
     private String errorMessage;
+
     private LocalDateTime createdAt;
 
-    @Column(length = 100, unique = false)
-    private String idempotencyKey; // 중복 저장 방지용 키
+    @Column(length = 100)
+    private String idempotencyKey;
 }

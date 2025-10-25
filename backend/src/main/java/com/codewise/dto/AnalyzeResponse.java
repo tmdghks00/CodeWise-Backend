@@ -5,6 +5,7 @@ import java.util.Map;
 
 public record AnalyzeResponse(
         String summary,
+        String purpose,
         Map<String, Object> metrics,
         List<Map<String, Object>> issues
 ) {}
