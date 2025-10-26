@@ -51,7 +51,7 @@ public class AnalysisResultService {
      * 새 분석 결과 저장 (AI 분석 결과를 DB에 기록)
      * - 기존의 랜덤 유저 자동 생성 로직 제거
      */
-    public void saveNewResult(String email, String code, String language, AnalyzeResponse aiResponse) {
+    public void saveNewResult(String email, String code, String language, String purpose, AnalyzeResponse aiResponse) { // ✅ purpose 필드 추가
         // 이메일 기반으로 사용자 찾기
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -61,6 +61,7 @@ public class AnalysisResultService {
                 .user(user)
                 .code(code)
                 .language(language != null ? language : "auto")
+                .purpose(purpose)
                 .build();
         codeSubmissionRepository.save(submission);
 
@@ -68,14 +69,14 @@ public class AnalysisResultService {
         AnalysisResult analysisResult = AnalysisResult.builder()
                 .codeSubmission(submission)
                 .language(language)
-                .purpose(aiResponse.purpose())
+                .purpose(purpose)
                 .summary(aiResponse.summary())
                 .suggestions(aiResponse.issues() != null ? aiResponse.issues().toString() : "")
                 .createdAt(LocalDateTime.now())
                 .build();
 
         analysisResultRepository.save(analysisResult);
-        log.info("✅ 분석 결과 저장 완료 for {}", email);
+        log.info("분석 결과 저장 완료 for {}", email);
     }
 
     /**

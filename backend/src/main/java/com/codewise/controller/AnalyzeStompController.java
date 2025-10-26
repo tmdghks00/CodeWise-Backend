@@ -3,6 +3,7 @@ package com.codewise.controller;
 import com.codewise.dto.AnalyzeRequest;
 import com.codewise.service.AiServerClient;
 import com.codewise.service.AnalysisResultService;
+import com.codewise.dto.AnalyzeResponse; // AnalyzeResponse 임포트 추가
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,19 +49,27 @@ public class AnalyzeStompController {
             log.warn(">>> [AnalyzeStompController] principal is null, fallback sessionId = {}", userKey);
         }
 
+        // AI 서버 클라이언트 호출
         aiServerClient.analyze(req).subscribe(result -> {
             try {
-                // DB 저장 시도
+                // AI 응답에서 final_purpose와 language를 추출하여 사용
+                String finalPurpose = result.final_purpose() != null ? result.final_purpose() : result.inferred_purpose();
+                String finalLanguage = result.metrics() != null && result.metrics().get("language") != null
+                        ? result.metrics().get("language").toString() : req.language();
+
+                // DB 저장 시도 (AnalysisResult 저장)
                 analysisResultService.saveNewResult(
                         userKey,
                         req.code(),
-                        req.language(),
+                        finalLanguage, // AI가 최종 추론한 언어 또는 요청 언어
+                        finalPurpose, // AI가 최종 추론한 목적
                         result
                 );
-                log.info(">>> [AnalyzeStompController] DB 저장 성공. userKey={}, lang={}", userKey, req.language());
+                log.info(">>> [AnalyzeStompController] DB 저장 성공. userKey={}, lang={}, purpose={}", userKey, finalLanguage, finalPurpose);
 
                 // 결과 전송
                 if (principal != null) {
+                    // 클라이언트(프론트)는 이 응답을 받고 /user/history 로 다시 API 호출을 수행함 (StompProvider.jsx)
                     messaging.convertAndSendToUser(userKey, "/queue/result", result);
                 } else {
                     messaging.convertAndSendToUser(userKey, "/queue/result", result, headersForSession(userKey));

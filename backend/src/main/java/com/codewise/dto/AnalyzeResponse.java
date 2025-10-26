@@ -7,5 +7,7 @@ public record AnalyzeResponse(
         String summary,
         String purpose,
         Map<String, Object> metrics,
-        List<Map<String, Object>> issues
+        List<Map<String, Object>> issues,
+        String inferred_purpose,
+        String final_purpose
 ) {}

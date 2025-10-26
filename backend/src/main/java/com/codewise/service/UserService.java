@@ -5,6 +5,7 @@ import com.codewise.dto.AnalysisResultDto;
 import com.codewise.dto.AnalysisResultFilterRequestDto;
 import com.codewise.dto.SignupRequestDto;
 import com.codewise.exception.CustomException;
+import com.codewise.repository.AnalysisHistoryRepository;
 import com.codewise.repository.AnalysisResultRepository;
 import com.codewise.repository.CodeSubmissionRepository;
 import com.codewise.repository.UserRepository;
@@ -23,17 +24,20 @@ public class UserService {
     private final CodeSubmissionRepository codeSubmissionRepository;
     private final AnalysisResultRepository analysisResultRepository;
     private final AnalysisResultService analysisResultService;
+    private final AnalysisHistoryRepository analysisHistoryRepository; // 💡 추가: History Repository
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        CodeSubmissionRepository codeSubmissionRepository,
                        AnalysisResultRepository analysisResultRepository,
-        AnalysisResultService analysisResultService) {
+                       AnalysisResultService analysisResultService,
+                       AnalysisHistoryRepository analysisHistoryRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.codeSubmissionRepository = codeSubmissionRepository;
         this.analysisResultRepository = analysisResultRepository;
         this.analysisResultService = analysisResultService;
+        this.analysisHistoryRepository = analysisHistoryRepository;
     }
 
     public User getUserInfo(String email) { // 이메일로 사용자 정보를 조회하는 메서드
@@ -52,7 +56,10 @@ public class UserService {
         // 2. 코드 제출 삭제
         codeSubmissionRepository.deleteAllByUser(user);
 
-        // 3. 유저 삭제
+        // 3. 분석 히스토리 삭제
+        analysisHistoryRepository.deleteAll(analysisHistoryRepository.findByUser(user));
+
+        // 4. 유저 삭제
         userRepository.delete(user);
     }
 

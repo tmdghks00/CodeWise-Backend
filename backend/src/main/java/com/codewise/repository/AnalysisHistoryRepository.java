@@ -11,4 +11,5 @@ public interface AnalysisHistoryRepository extends JpaRepository<AnalysisHistory
     List<AnalysisHistory> findByUser(User user);
 
     boolean existsByUserAndIdempotencyKey(User user, String idempotencyKey);
+
 }
