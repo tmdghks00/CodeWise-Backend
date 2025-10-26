@@ -30,9 +30,6 @@ public class CodeSubmission { // 사용자가 제출한 코드 정보를 저장�
 
     private String purpose; // 추가: 코드 제출 목적
 
-    @ElementCollection
-    private List<String> errors; // 추가: 분석된 오류 리스트
-
     private LocalDateTime submittedAt;
 
 }
