@@ -24,7 +24,7 @@ public class UserService {
     private final CodeSubmissionRepository codeSubmissionRepository;
     private final AnalysisResultRepository analysisResultRepository;
     private final AnalysisResultService analysisResultService;
-    private final AnalysisHistoryRepository analysisHistoryRepository; // 💡 추가: History Repository
+    private final AnalysisHistoryRepository analysisHistoryRepository;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -50,14 +50,14 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
 
-        // 1. 분석 결과 먼저 삭제 (연관관계상 AnalysisResult → CodeSubmission 순서)
+        // 1. 분석 결과 먼저 삭제 (AnalysisResult → CodeSubmission 순서)
         analysisResultRepository.deleteAllByCodeSubmission_User(user);
 
         // 2. 코드 제출 삭제
         codeSubmissionRepository.deleteAllByUser(user);
 
-        // 3. 분석 히스토리 삭제
-        analysisHistoryRepository.deleteAll(analysisHistoryRepository.findByUser(user));
+        // 3. 분석 히스토리 삭제 => 안전하고 명시적인 deleteAllByUser 메서드 사용
+        analysisHistoryRepository.deleteAllByUser(user);
 
         // 4. 유저 삭제
         userRepository.delete(user);
@@ -82,7 +82,6 @@ public class UserService {
         AnalysisResultFilterRequestDto filterDto = new AnalysisResultFilterRequestDto();
         filterDto.setSortBy(sortBy);
         filterDto.setOrder(direction);
-        // language, keyword 필터링도 필요하면 여기에 추가
         return analysisResultService.getFilteredAndSortedUserHistory(email, filterDto);
     }
 
