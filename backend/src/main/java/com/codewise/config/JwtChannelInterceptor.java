@@ -12,7 +12,9 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
@@ -30,9 +32,12 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+        // wrap() → MessageHeaderAccessor.getAccessor() 로 변경
+        StompHeaderAccessor accessor =
+                MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+
+        if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             log.info("[JwtChannelInterceptor] WebSocket CONNECT 요청 감지");
 
             String token = accessor.getFirstNativeHeader("Authorization");
@@ -45,47 +50,33 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             log.info("추출된 JWT 토큰: {}", token);
 
             try {
-                // JWT 에서 email 추출
                 String email = jwtUtil.getEmail(token);
                 log.info("[JwtChannelInterceptor] JWT 에서 추출된 email = {}", email);
 
-                // DB 사용자 존재 여부 확인
-                boolean exists = userRepository.existsByEmail(email);
-                log.info("DB 사용자 존재 여부(email={}): {}", email, exists);
-
-                if (!exists) {
-                    log.warn("DB에 사용자 없음 → 자동 등록 진행: {}", email);
-
-                    User newUser = new User();
-                    newUser.setEmail(email);
-
-                    String rawPassword = "test1234";
-                    String encodedPassword = new BCryptPasswordEncoder().encode(rawPassword);
-                    newUser.setPassword(encodedPassword);
-
-                    newUser.setRole(UserRole.USER);
-
-                    User savedUser = userRepository.save(newUser);
-                    log.info("새 사용자 자동 등록 완료: id={}, email={}", savedUser.getId(), savedUser.getEmail());
+                if (!userRepository.existsByEmail(email)) {
+                    log.warn("⚠️ DB에 사용자 없음 → 회원가입 없이 WebSocket 사용 불가");
+                    throw new IllegalArgumentException("등록되지 않은 사용자입니다.");
                 }
 
-                // DB 에서 사용자 정보 로드
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-                log.info("DB 에서 UserDetails 로드 성공: {}", userDetails.getUsername());
-
-                // Authentication 객체 세팅
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                email, null, userDetails.getAuthorities());
+                                userDetails, null, userDetails.getAuthorities());
 
+                // STOMP 세션에 Principal 저장
                 accessor.setUser(auth);
-                log.info("Principal 세팅 완료: {}", auth.getName());
+
+                // SecurityContext 에도 Principal 저장
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+                log.info(" Principal 세팅 완료: {}", auth.getName());
 
             } catch (Exception e) {
                 log.error("JWT 검증 실패 또는 사용자 정보 로드 실패", e);
                 throw new IllegalArgumentException("유효하지 않은 JWT 토큰입니다.", e);
             }
         }
+
         return message;
     }
 }
