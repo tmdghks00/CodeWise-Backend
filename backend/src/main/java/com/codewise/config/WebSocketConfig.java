@@ -3,11 +3,12 @@ package com.codewise.config;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.web.socket.config.annotation.*;
 
 @Configuration
-@EnableWebSocketMessageBroker  // WebSocket 메시지 브로커 기능을 활성화
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer { // WebSocket 설정을 통해 실시간 통신 구성
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtChannelInterceptor jwtChannelInterceptor;
 
@@ -17,21 +18,22 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer { // We
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // topic: 브로드캐스트용 , queue: 사용자 개별 메시징용 (점대점)
-        registry.enableSimpleBroker("/topic", "/queue"); // queue 추가
-        registry.setApplicationDestinationPrefixes("/app");
 
-        // user prefix 설정
+        registry.enableSimpleBroker("/topic", "/queue")
+                .setHeartbeatValue(new long[]{0, 0});     // SimpleBroker heartbeat OFF
+
+        registry.setApplicationDestinationPrefixes("/app");
         registry.setUserDestinationPrefix("/user");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // 클라이언트 연결 엔드포인트
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
     }
 
-    @Override //   JwtChannelInterceptor 등록 → JWT 토큰 검증 & 인증 정보 주입
+    @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(jwtChannelInterceptor);
     }
