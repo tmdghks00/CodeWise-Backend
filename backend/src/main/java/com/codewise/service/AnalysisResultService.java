@@ -10,6 +10,7 @@ import com.codewise.dto.AnalyzeResponse;
 import com.codewise.repository.AnalysisResultRepository;
 import com.codewise.repository.CodeSubmissionRepository;
 import com.codewise.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,16 @@ public class AnalysisResultService {
         catch (Exception e) { return 0; }
     }
 
-    public void saveNewResult(String email, String code, String language, AnalyzeResponse aiResponse) {
+    public void saveNewResult(String email, String code, String language, String aiResponseJson) {
+        AnalyzeResponse aiResponse = null;
+
+        try {
+            aiResponse = new ObjectMapper().readValue(aiResponseJson, AnalyzeResponse.class);
+        } catch (Exception e) {
+            log.error("❌ JSON 파싱 실패: aiResponseJson={}", aiResponseJson, e);
+            throw new RuntimeException("AI Response 파싱 실패");   // ✅ 예외 throw하여 상위에서 처리
+        }
+
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = new User();
             newUser.setEmail(email);
@@ -74,6 +84,8 @@ public class AnalysisResultService {
 
         analysisResultRepository.save(analysisResult);
     }
+
+
 
     public void saveResultFromAiResponse(Long submissionId, AnalyzeResponse aiResponse) {
         CodeSubmission codeSubmission = codeSubmissionRepository.findById(submissionId)

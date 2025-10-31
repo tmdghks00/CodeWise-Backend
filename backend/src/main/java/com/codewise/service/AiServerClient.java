@@ -21,15 +21,16 @@ public class AiServerClient {
     }
 
     // AI 서버 호출 (비동기, 리액티브 방식)
-    public Mono<AnalyzeResponse> analyze(AnalyzeRequest req) {
+    public Mono<String> analyze(AnalyzeRequest req) {
         return webClient.post()
-                .uri("/analyze") // AI 서버 엔드포인트
+                .uri("/analyze")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(req)
                 .retrieve()
                 .onStatus(status -> status.isError(),
                         res -> res.bodyToMono(String.class)
                                 .map(msg -> new RuntimeException("AI error: " + msg)))
-                .bodyToMono(AnalyzeResponse.class);
+                .bodyToMono(String.class);   // ✅ JSON 원본 그대로 받음
     }
+
 }
