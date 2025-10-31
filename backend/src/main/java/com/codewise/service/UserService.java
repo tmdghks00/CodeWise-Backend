@@ -5,6 +5,7 @@ import com.codewise.dto.AnalysisResultDto;
 import com.codewise.dto.AnalysisResultFilterRequestDto;
 import com.codewise.dto.SignupRequestDto;
 import com.codewise.exception.CustomException;
+import com.codewise.repository.AnalysisHistoryRepository;
 import com.codewise.repository.AnalysisResultRepository;
 import com.codewise.repository.CodeSubmissionRepository;
 import com.codewise.repository.UserRepository;
@@ -23,17 +24,20 @@ public class UserService {
     private final CodeSubmissionRepository codeSubmissionRepository;
     private final AnalysisResultRepository analysisResultRepository;
     private final AnalysisResultService analysisResultService;
+    private final AnalysisHistoryRepository analysisHistoryRepository;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        CodeSubmissionRepository codeSubmissionRepository,
                        AnalysisResultRepository analysisResultRepository,
-        AnalysisResultService analysisResultService) {
+                       AnalysisResultService analysisResultService,
+                       AnalysisHistoryRepository analysisHistoryRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.codeSubmissionRepository = codeSubmissionRepository;
         this.analysisResultRepository = analysisResultRepository;
         this.analysisResultService = analysisResultService;
+        this.analysisHistoryRepository = analysisHistoryRepository;
     }
 
     public User getUserInfo(String email) { // 이메일로 사용자 정보를 조회하는 메서드
@@ -45,6 +49,9 @@ public class UserService {
     public void deleteUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+
+        // 0. 분석 이력 (AnalysisHistory) 먼저 삭제
+        analysisHistoryRepository.deleteAllByUser(user);
 
         // 1. 분석 결과 먼저 삭제 (연관관계상 AnalysisResult → CodeSubmission 순서)
         analysisResultRepository.deleteAllByCodeSubmission_User(user);
