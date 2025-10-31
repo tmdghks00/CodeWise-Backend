@@ -84,8 +84,9 @@ public class HistoryController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<Map<String, Object>> getUserStats(@AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
+    public ResponseEntity<Map<String, Object>> getUserStats(org.springframework.security.core.Authentication authentication) {
+        String email = authentication.getName();
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 

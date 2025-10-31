@@ -22,11 +22,13 @@ public class UserController { // 회원 정보 조회, 수정, 삭제 요청을 
         return ResponseEntity.ok(userService.getUserInfo(username));
     }
 
-    @DeleteMapping("/me") // "/user/me" 경로의 DELETE 요청을 처리 (현재 로그인한 사용자 계정 삭제)
-    public ResponseEntity<String> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
-        userService.deleteUser(userDetails.getUsername());
+    @DeleteMapping("/me")
+    public ResponseEntity<String> deleteUser(org.springframework.security.core.Authentication authentication) {
+        String email = authentication.getName(); // ✅ username / email 바로 가져옴
+        userService.deleteUser(email);
         return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
     }
+
 
     @PutMapping("/me") // "/user/me" 경로의 PUT 요청을 처리 (현재 로그인한 사용자 정보 수정)
     public ResponseEntity<String> updateUser(@RequestBody SignupRequestDto dto, @AuthenticationPrincipal UserDetails userDetails) {
