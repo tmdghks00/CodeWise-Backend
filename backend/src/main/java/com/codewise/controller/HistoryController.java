@@ -7,6 +7,7 @@ import com.codewise.repository.AnalysisHistoryRepository;
 import com.codewise.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +30,11 @@ public class HistoryController {
     @PostMapping
     public ResponseEntity<String> saveHistory(
             @RequestBody HistoryRequestDto dto,
-            @AuthenticationPrincipal UserDetails userDetails,
+            Authentication authentication,         // ✅ 핵심 변경
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idemKey
     ) {
-        String email = userDetails.getUsername();
+        String email = authentication.getName();   // ✅ 어떤 로그인 방식이든 username(email) 정상 추출
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -75,8 +77,8 @@ public class HistoryController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AnalysisHistory>> getUserHistory(@AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
+    public ResponseEntity<List<AnalysisHistory>> getUserHistory(Authentication authentication) {
+        String email = authentication.getName();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         List<AnalysisHistory> historyList = analysisHistoryRepository.findByUser(user);
