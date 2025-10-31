@@ -169,4 +169,16 @@ public class AnalysisResultService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 분석 결과를 찾을 수 없습니다."));
         return AnalysisResultDto.fromEntity(result);
     }
+
+    /** submissionId + userId 조합 조회 */
+    public AnalysisResultDto getResultBySubmissionIdAndUserId(Long submissionId, Long userId) {
+        AnalysisResult result = analysisResultRepository
+                .findByCodeSubmission_IdAndCodeSubmission_User_Id(submissionId, userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "해당 submissionId + userId 의 분석 결과가 없습니다."
+                ));
+
+        return AnalysisResultDto.fromEntity(result);
+    }
+
 }
