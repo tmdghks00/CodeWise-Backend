@@ -85,18 +85,39 @@ public class AnalysisResultService {
 
             analysisResultRepository.save(analysisResult);
 
-            // (History 저장)
-            AnalysisHistory history = AnalysisHistory.builder()
-                    .user(user)
-                    .language(language)
-                    .purpose("analysis")  // or req.getPurpose() 로 전달 가능
-                    .errorType(null)
-                    .errorMessage(null)
-                    .createdAt(LocalDateTime.now())
-                    .idempotencyKey(UUID.randomUUID().toString())
-                    .build();
+            // History 저장 - issues 배열 저장
+            if (issues.isArray()) {
+                for (JsonNode issue : issues) {
+                    String type = issue.path("severity").asText(null);
+                    String msg = issue.path("message").asText(null);
 
-            analysisHistoryRepository.save(history);
+                    AnalysisHistory history = AnalysisHistory.builder()
+                            .user(user)
+                            .language(language)
+                            .purpose("analysis")
+                            .errorType(type)
+                            .errorMessage(msg)
+                            .createdAt(LocalDateTime.now())
+                            .idempotencyKey(UUID.randomUUID().toString())
+                            .build();
+
+                    analysisHistoryRepository.save(history);
+                }
+            } else {
+                // issues가 없을 경우 기본값 저장
+                AnalysisHistory history = AnalysisHistory.builder()
+                        .user(user)
+                        .language(language)
+                        .purpose("analysis")
+                        .errorType(null)
+                        .errorMessage(null)
+                        .createdAt(LocalDateTime.now())
+                        .idempotencyKey(UUID.randomUUID().toString())
+                        .build();
+
+                analysisHistoryRepository.save(history);
+            }
+
 
             log.info("✅ 분석 결과 + 히스토리 저장 완료 (email = {})", email);
 
