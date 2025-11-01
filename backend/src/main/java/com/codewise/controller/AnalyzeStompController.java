@@ -24,7 +24,7 @@ public class AnalyzeStompController {
     private final AiServerClient aiServerClient;
     private final SimpMessagingTemplate messaging;
     private final AnalysisResultService analysisResultService;
-    private final ObjectMapper objectMapper;    // ✅ 핵심 추가
+    private final ObjectMapper objectMapper;
 
     // 세션에 WebSocket 메시지를 보내기 위한 Header 설정
     private org.springframework.messaging.MessageHeaders headersForSession(String sessionId) {
@@ -40,58 +40,57 @@ public class AnalyzeStompController {
                         Principal principal,
                         SimpMessageHeaderAccessor accessor) {
 
-        String userKey;
-
+        // ✅ userKey 는 무조건 email (principal.name = email)
+        String email;
         if (principal != null) {
-            userKey = principal.getName(); // JwtChannelInterceptor에서 email을 username으로 넣어줌
-            log.info(">>> [AnalyzeStompController] principal(email) = {}", userKey);
+            email = principal.getName();   // ✅ JwtChannelInterceptor 에서 email 넣어줌
+            log.info(">>> [AnalyzeStompController] Email from principal = {}", email);
         } else {
-            userKey = accessor.getSessionId(); // 로그인 안된 사용자 fallback
-            log.warn(">>> [AnalyzeStompController] principal is null, fallback sessionId = {}", userKey);
+            // 로그인 안 했을 경우 세션 id 를 key 로 사용
+            email = accessor.getSessionId();
+            log.warn(">>> [AnalyzeStompController] principal is NULL -> fallback sessionId = {}", email);
         }
 
         // ✅ AI Server 호출 (Mono<String> 으로 JSON 문자열 반환)
         aiServerClient.analyze(req).subscribe(aiResponseJson -> {
             try {
-                // ✅ JSON 문자열을 JsonNode로 변환 → 필드 누락 방지!
                 JsonNode jsonNode = objectMapper.readTree(aiResponseJson);
 
-                // ✅ DB 저장
+                // ✅ DB 저장 (Stomp + WebSocket)
                 analysisResultService.saveNewResult(
-                        userKey,
+                        email,
                         req.code(),
                         req.language(),
-                        jsonNode.toString()        // JSON 그대로 저장
+                        jsonNode.toString()
                 );
 
-                log.info(">>> [AnalyzeStompController] DB 저장 성공 userKey={}, lang={}", userKey, req.language());
+                log.info("✅ 분석 결과 저장 완료 (email={}, lang={})", email, req.language());
 
-                // ✅ WebSocket으로 JsonNode 그대로 전송
+                // ✅ WebSocket 메시지 전송
                 if (principal != null) {
-                    messaging.convertAndSendToUser(userKey, "/queue/result", jsonNode);
+                    messaging.convertAndSendToUser(email, "/queue/result", jsonNode);
                 } else {
-                    messaging.convertAndSendToUser(userKey, "/queue/result", jsonNode, headersForSession(userKey));
+                    messaging.convertAndSendToUser(email, "/queue/result", jsonNode, headersForSession(email));
                 }
 
             } catch (Exception e) {
-                log.error(">>> [AnalyzeStompController] DB 저장 or JSON parsing 실패 userKey={}", userKey, e);
+                log.error("❌ DB 저장 또는 JSON 변환 실패 (email={})", email, e);
 
-                Map<String, Object> error = Map.of("error", "DB 저장 실패 또는 JSON 변환 실패");
-
+                Map<String, Object> error = Map.of("error", "DB 저장 실패 또는 JSON 변환 오류");
                 if (principal != null) {
-                    messaging.convertAndSendToUser(userKey, "/queue/result", error);
+                    messaging.convertAndSendToUser(email, "/queue/result", error);
                 } else {
-                    messaging.convertAndSendToUser(userKey, "/queue/result", error, headersForSession(userKey));
+                    messaging.convertAndSendToUser(email, "/queue/result", error, headersForSession(email));
                 }
             }
         }, err -> {
-            log.error(">>> [AnalyzeStompController] AI 서버 호출 실패 userKey={}, err={}", userKey, err.getMessage());
+            log.error("🚨 AI 서버 요청 실패 email={}, err={}", email, err.getMessage());
 
             Map<String, Object> error = Map.of("error", err.getMessage());
             if (principal != null) {
-                messaging.convertAndSendToUser(userKey, "/queue/result", error);
+                messaging.convertAndSendToUser(email, "/queue/result", error);
             } else {
-                messaging.convertAndSendToUser(userKey, "/queue/result", error, headersForSession(userKey));
+                messaging.convertAndSendToUser(email, "/queue/result", error, headersForSession(email));
             }
         });
     }
