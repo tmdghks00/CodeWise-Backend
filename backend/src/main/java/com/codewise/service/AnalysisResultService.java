@@ -1,11 +1,9 @@
 package com.codewise.service;
 
-import com.codewise.domain.AnalysisResult;
-import com.codewise.domain.CodeSubmission;
-import com.codewise.domain.User;
-import com.codewise.domain.UserRole;
+import com.codewise.domain.*;
 import com.codewise.dto.AnalysisResultDto;
 import com.codewise.dto.AnalysisResultFilterRequestDto;
+import com.codewise.repository.AnalysisHistoryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.codewise.repository.AnalysisResultRepository;
@@ -20,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +30,8 @@ public class AnalysisResultService {
     private final AnalysisResultRepository analysisResultRepository;
     private final CodeSubmissionRepository codeSubmissionRepository;
     private final UserRepository userRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();   // ✅ ObjectMapper 주입
+    private final ObjectMapper objectMapper = new ObjectMapper();   // ObjectMapper 주입
+    private final AnalysisHistoryRepository analysisHistoryRepository;
 
     /** 숫자 변환 Utility */
     private Double toDouble(JsonNode node) {
@@ -85,10 +85,23 @@ public class AnalysisResultService {
 
             analysisResultRepository.save(analysisResult);
 
-            log.info("✅ 분석 결과 저장 완료 (email = {}, score = {})", email, toInt(metrics.path("score")));
+            // (History 저장)
+            AnalysisHistory history = AnalysisHistory.builder()
+                    .user(user)
+                    .language(language)
+                    .purpose("analysis")  // or req.getPurpose() 로 전달 가능
+                    .errorType(null)
+                    .errorMessage(null)
+                    .createdAt(LocalDateTime.now())
+                    .idempotencyKey(UUID.randomUUID().toString())
+                    .build();
+
+            analysisHistoryRepository.save(history);
+
+            log.info("✅ 분석 결과 + 히스토리 저장 완료 (email = {})", email);
 
         } catch (Exception e) {
-            log.error("❌ AI JSON 저장 실패: {}", aiResponseJson, e);
+            log.error("❌ AI Response 저장 중 오류 발생", e);
             throw new RuntimeException("AI Response 저장 중 오류 발생", e);
         }
     }
