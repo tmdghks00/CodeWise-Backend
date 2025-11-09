@@ -18,7 +18,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private final JwtUtil jwtUtil;
     // 프론트엔드 리다이렉트 URL (개발 환경에 맞게 수정)
-    private final String frontendRedirectUrl = "http://localhost:3000/oauth2/redirect"; // 프론트엔드 로그인 성공 후 리다이렉트될 URL
+    private final String frontendRedirectUrl = "https://codewise-frontend.vercel.app/oauth2/redirect";
 
     public OAuth2AuthenticationSuccessHandler(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
