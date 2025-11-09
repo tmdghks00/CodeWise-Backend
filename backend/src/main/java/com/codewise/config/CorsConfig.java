@@ -11,11 +11,14 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ 프론트 주소 허용 (Vercel 도메인)
+        // 프론트(Vercel)
         config.addAllowedOrigin("https://codewise-frontend.vercel.app");
 
-        // ✅ Backend HTTPS 주소도 WebSocket 허용
+        // 백엔드(EC2, DuckDNS)
         config.addAllowedOrigin("https://codewise-backend.duckdns.org");
+
+        // AI 서버(Render)
+        config.addAllowedOrigin("https://codewise-ai-server.onrender.com");
 
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
